@@ -8,6 +8,6 @@ void ServoMotor::init() {
 
 }
 
-void ServoMotor::rotateTo(int angle) {
-    servo.write(angle);
+void ServoMotor::setVelocity(int velocity) {
+    servo.write(velocity);
 }
