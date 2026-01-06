@@ -11,6 +11,7 @@
 #include <rmw_microros/rmw_microros.h>
 #include <components/LoadCell.h>
 #include <components/ServoMotor.h>
+#include <components/StepperMotor.h>
 
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
@@ -22,13 +23,31 @@ const unsigned int timer_timeout = 1000;
 // Pins (Broken: 14)
 const int LOADCELL_DOUT_PIN = 13;
 const int LOADCELL_SCK_PIN  = 12;
+
 const int UPPER_END_STOP_SWITCH_PIN = 22;
+
 const int CONTAINER_SERVO_PIN = 27;
 
-// Components
-LoadCell loadCell(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
-ServoMotor container_servo(CONTAINER_SERVO_PIN);
+const int PRESS_PIN_1 = 19;
+const int PRESS_PIN_2 = 18;
+const int PRESS_PIN_3 = 17;
+const int PRESS_PIN_4 = 16;
 
+// Components
+LoadCell loadCell(
+  LOADCELL_DOUT_PIN, 
+  LOADCELL_SCK_PIN
+);
+ServoMotor container_servo(
+  CONTAINER_SERVO_PIN
+);
+StepperMotor press(
+  PRESS_PIN_1,
+  PRESS_PIN_2,
+  PRESS_PIN_3,
+  PRESS_PIN_4,
+  1.8
+);
 
 
 // Node
@@ -62,9 +81,9 @@ std_srvs__srv__SetBool_Response start_press_res_msg;
 
 
 
-// Subscriptions
+// Subscriptions:
 
-// Setting angle of container servo
+// Setting velocity of container servo
 rcl_subscription_t container_servo_velocity_sub;
 std_msgs__msg__Int32 container_servo_velocity_msg;
 
@@ -94,7 +113,13 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
       RCSOFTCHECK(rcl_publish(&weight_publisher, &weight_msg, NULL));
     }
 
-    upper_switch_msg.data = (digitalRead(UPPER_END_STOP_SWITCH_PIN) == LOW);
+    bool upper_switch_status = (digitalRead(UPPER_END_STOP_SWITCH_PIN) == LOW);
+    upper_switch_msg.data = upper_switch_status;
+
+    if (upper_switch_status) {
+      press.stop();
+    }
+
     RCSOFTCHECK(rcl_publish(&upper_switch_publisher, &upper_switch_msg, NULL));
   }
 }
@@ -102,6 +127,7 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
 void start_press_callback(const void  *request, void *response) {
   std_srvs__srv__SetBool_Response *res = (std_srvs__srv__SetBool_Response *) response;
   std_srvs__srv__SetBool_Request *req = (std_srvs__srv__SetBool_Request *) request;
+  press.setDirection(req->data);
   if (req->data) {
     res->success = true;
     static char start_msg[] = "Press is going up...";
@@ -252,6 +278,8 @@ void setup() {
 }
 
 void loop() {
-  delay(100);
   RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
+  if (press.isActive()) {
+    press.press();
+  }
 }
