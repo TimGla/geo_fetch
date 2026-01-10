@@ -21,17 +21,17 @@ const unsigned int num_handles = 4;
 const unsigned int timer_timeout = 1000;
 
 // Pins (Broken: 14)
-const int LOADCELL_DOUT_PIN = 13;
-const int LOADCELL_SCK_PIN  = 12;
+const int LOADCELL_DOUT_PIN = 4;
+const int LOADCELL_SCK_PIN  = 16;
 
-const int UPPER_END_STOP_SWITCH_PIN = 22;
+const int UPPER_END_STOP_SWITCH_PIN = 17;
 
-const int CONTAINER_SERVO_PIN = 27;
+const int CONTAINER_SERVO_PIN = 5;
 
-const int PRESS_PIN_1 = 19;
-const int PRESS_PIN_2 = 18;
-const int PRESS_PIN_3 = 17;
-const int PRESS_PIN_4 = 16;
+const int PRESS_PIN_1 = 12;
+const int PRESS_PIN_2 = 13;
+const int PRESS_PIN_3 = 22;
+const int PRESS_PIN_4 = 27;
 
 // Components
 LoadCell loadCell(
@@ -42,10 +42,8 @@ ServoMotor container_servo(
   CONTAINER_SERVO_PIN
 );
 StepperMotor press(
-  PRESS_PIN_1,
-  PRESS_PIN_2,
-  PRESS_PIN_3,
-  PRESS_PIN_4,
+  12, // IN1
+  13, // IN3
   1.8
 );
 
@@ -117,7 +115,7 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
     upper_switch_msg.data = upper_switch_status;
 
     if (upper_switch_status) {
-      press.stop();
+      //press.stop();
     }
 
     RCSOFTCHECK(rcl_publish(&upper_switch_publisher, &upper_switch_msg, NULL));
@@ -127,20 +125,16 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
 void start_press_callback(const void  *request, void *response) {
   std_srvs__srv__SetBool_Response *res = (std_srvs__srv__SetBool_Response *) response;
   std_srvs__srv__SetBool_Request *req = (std_srvs__srv__SetBool_Request *) request;
-  press.setDirection(req->data);
-  if (req->data) {
-    res->success = true;
-    static char start_msg[] = "Press is going up...";
-    res->message.data = start_msg;
-    res->message.size = strlen(start_msg);
-    res->message.capacity = strlen(start_msg) + 1;
-    return;
-  }
+  static char output_buffer[100];
+  float newSpeed = press.setDirection(req->data);
+
+  const char* action = req->data ? "up" : "down";
+  snprintf(output_buffer, sizeof(output_buffer), "Moving %s at %.2f", action, newSpeed);
+
   res->success = true;
-  static char stop_msg[] = "Press is going down...";
-  res->message.data = stop_msg;
-  res->message.size = strlen(stop_msg);
-  res->message.capacity = strlen(stop_msg) + 1;
+  res->message.data = output_buffer;
+  res->message.size = strlen(output_buffer);
+  res->message.capacity = 100;
 }
 
 void tare_load_cell_callback(const void *request, void *response) {
@@ -177,6 +171,7 @@ void setup() {
   // Set up components
   loadCell.init();
   container_servo.init();
+  press.init();
 
   // Create init_options
   allocator = rcl_get_default_allocator();

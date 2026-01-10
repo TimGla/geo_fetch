@@ -2,13 +2,11 @@
 #include <Arduino.h>
 
 StepperMotor::StepperMotor(
-    int pin_1, 
-    int pin_2, 
-    int pin_3, 
-    int pin_4, 
+    int step_pin, 
+    int dir_pin,
     float deg_per_step,
     AccelStepper::MotorInterfaceType type
-) : stepper(type, pin_1, pin_2, pin_3, pin_4), degrees_per_step(deg_per_step) {
+) : stepper(type, step_pin, dir_pin), degrees_per_step(deg_per_step) {
         steps_per_revolution = round(360.0 / deg_per_step);
 }
 
@@ -23,10 +21,12 @@ bool StepperMotor::isActive() {
     return active;
 }
 
-void StepperMotor::setDirection(bool direction, float speed) {
+float StepperMotor::setDirection(bool direction) {
     float _speed = direction ? speed : (-1 * speed);
+    stepper.setCurrentPosition(0);
     stepper.setSpeed(_speed);
     active = true;
+    return stepper.speed();
 }
 
 void StepperMotor::press() {
@@ -35,7 +35,8 @@ void StepperMotor::press() {
 
 
 void StepperMotor::stop() {
-    stepper.stop();
+    //stepper.stop();
     stepper.setSpeed(0);
+    stepper.setCurrentPosition(0);
     active = false;
 }
