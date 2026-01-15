@@ -24,14 +24,13 @@ const unsigned int timer_timeout = 1000;
 const int LOADCELL_DOUT_PIN = 4;
 const int LOADCELL_SCK_PIN  = 16;
 
-const int UPPER_END_STOP_SWITCH_PIN = 17;
+const int UPPER_END_STOP_SWITCH_PIN = 15;
 
 const int CONTAINER_SERVO_PIN = 5;
 
-const int PRESS_PIN_1 = 12;
-const int PRESS_PIN_2 = 13;
-const int PRESS_PIN_3 = 22;
-const int PRESS_PIN_4 = 27;
+const int PRESS_EN_PIN = 14;
+const int PRESS_DIR_PIN = 13;
+const int PRESS_STEP_PIN = 12;
 
 // Components
 LoadCell loadCell(
@@ -42,10 +41,12 @@ ServoMotor container_servo(
   CONTAINER_SERVO_PIN
 );
 StepperMotor press(
-  12, // IN1
-  13, // IN3
+  PRESS_EN_PIN,
+  PRESS_STEP_PIN,
+  PRESS_DIR_PIN,
   1.8
 );
+
 
 
 // Node
@@ -126,10 +127,10 @@ void start_press_callback(const void  *request, void *response) {
   std_srvs__srv__SetBool_Response *res = (std_srvs__srv__SetBool_Response *) response;
   std_srvs__srv__SetBool_Request *req = (std_srvs__srv__SetBool_Request *) request;
   static char output_buffer[100];
-  float newSpeed = press.setDirection(req->data);
+  press.setDirection(req->data);
 
   const char* action = req->data ? "up" : "down";
-  snprintf(output_buffer, sizeof(output_buffer), "Moving %s at %.2f", action, newSpeed);
+  snprintf(output_buffer, sizeof(output_buffer), "Moving %s", action);
 
   res->success = true;
   res->message.data = output_buffer;
@@ -172,7 +173,8 @@ void setup() {
   loadCell.init();
   container_servo.init();
   press.init();
-
+  press.setDirection(false);
+  
   // Create init_options
   allocator = rcl_get_default_allocator();
   RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
@@ -273,7 +275,7 @@ void setup() {
 }
 
 void loop() {
-  RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
+  RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(1)));
   if (press.isActive()) {
     press.press();
   }

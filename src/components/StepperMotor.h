@@ -7,12 +7,14 @@ class StepperMotor {
 private:
     AccelStepper stepper;
     float degrees_per_step;
-    float speed = 600.0;
+    float speed = 1000;
     long steps_per_revolution;
     bool active = false;
+    int en_pin;
 
 public:
     StepperMotor(
+        int en_pin,
         int step_pin, 
         int dir_pin,
         float deg_per_step, 
@@ -20,10 +22,13 @@ public:
     );
     void init();
     bool isActive();
-    float setDirection(bool direction);
+    void setDirection(bool direction);
     void press();
     void stop();
 };
 
 
 #endif
+
+
+
