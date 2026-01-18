@@ -10,8 +10,8 @@
 #include <std_msgs/msg/int32.h>
 #include <rmw_microros/rmw_microros.h>
 #include <components/LoadCell.h>
-#include <components/ServoMotor.h>
-#include <components/StepperMotor.h>
+#include <components/ContainerSpinner.h>
+#include <components/Press.h>
 
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
@@ -21,33 +21,32 @@ const unsigned int num_handles = 4;
 const unsigned int timer_timeout = 1000;
 
 // Pins (Broken: 14)
-const int LOADCELL_DOUT_PIN = 13;
-const int LOADCELL_SCK_PIN  = 12;
+const int LOADCELL_DOUT_PIN = 4;
+const int LOADCELL_SCK_PIN  = 16;
 
-const int UPPER_END_STOP_SWITCH_PIN = 22;
+const int UPPER_END_STOP_SWITCH_PIN = 15;
 
-const int CONTAINER_SERVO_PIN = 27;
+const int CONTAINER_SERVO_PIN = 5;
 
-const int PRESS_PIN_1 = 19;
-const int PRESS_PIN_2 = 18;
-const int PRESS_PIN_3 = 17;
-const int PRESS_PIN_4 = 16;
+const int PRESS_EN_PIN = 14;
+const int PRESS_DIR_PIN = 13;
+const int PRESS_STEP_PIN = 12;
 
 // Components
 LoadCell loadCell(
   LOADCELL_DOUT_PIN, 
   LOADCELL_SCK_PIN
 );
-ServoMotor container_servo(
+ContainerSpinner container_servo(
   CONTAINER_SERVO_PIN
 );
-StepperMotor press(
-  PRESS_PIN_1,
-  PRESS_PIN_2,
-  PRESS_PIN_3,
-  PRESS_PIN_4,
+Press press(
+  PRESS_EN_PIN,
+  PRESS_STEP_PIN,
+  PRESS_DIR_PIN,
   1.8
 );
+
 
 
 // Node
@@ -117,7 +116,7 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
     upper_switch_msg.data = upper_switch_status;
 
     if (upper_switch_status) {
-      press.stop();
+      //press.stop();
     }
 
     RCSOFTCHECK(rcl_publish(&upper_switch_publisher, &upper_switch_msg, NULL));
@@ -127,20 +126,16 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
 void start_press_callback(const void  *request, void *response) {
   std_srvs__srv__SetBool_Response *res = (std_srvs__srv__SetBool_Response *) response;
   std_srvs__srv__SetBool_Request *req = (std_srvs__srv__SetBool_Request *) request;
+  static char output_buffer[100];
   press.setDirection(req->data);
-  if (req->data) {
-    res->success = true;
-    static char start_msg[] = "Press is going up...";
-    res->message.data = start_msg;
-    res->message.size = strlen(start_msg);
-    res->message.capacity = strlen(start_msg) + 1;
-    return;
-  }
+
+  const char* action = req->data ? "up" : "down";
+  snprintf(output_buffer, sizeof(output_buffer), "Moving %s", action);
+
   res->success = true;
-  static char stop_msg[] = "Press is going down...";
-  res->message.data = stop_msg;
-  res->message.size = strlen(stop_msg);
-  res->message.capacity = strlen(stop_msg) + 1;
+  res->message.data = output_buffer;
+  res->message.size = strlen(output_buffer);
+  res->message.capacity = 100;
 }
 
 void tare_load_cell_callback(const void *request, void *response) {
@@ -176,8 +171,8 @@ void setup() {
 
   // Set up components
   loadCell.init();
-  container_servo.init();
-
+  press.init();
+  
   // Create init_options
   allocator = rcl_get_default_allocator();
   RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
@@ -278,7 +273,7 @@ void setup() {
 }
 
 void loop() {
-  RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
+  RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(1)));
   if (press.isActive()) {
     press.press();
   }
