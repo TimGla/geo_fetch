@@ -10,8 +10,8 @@
 #include <std_msgs/msg/int32.h>
 #include <rmw_microros/rmw_microros.h>
 #include <components/LoadCell.h>
-#include <components/ServoMotor.h>
-#include <components/StepperMotor.h>
+#include <components/ContainerSpinner.h>
+#include <components/Press.h>
 
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
@@ -37,10 +37,10 @@ LoadCell loadCell(
   LOADCELL_DOUT_PIN, 
   LOADCELL_SCK_PIN
 );
-ServoMotor container_servo(
+ContainerSpinner container_servo(
   CONTAINER_SERVO_PIN
 );
-StepperMotor press(
+Press press(
   PRESS_EN_PIN,
   PRESS_STEP_PIN,
   PRESS_DIR_PIN,
@@ -171,9 +171,7 @@ void setup() {
 
   // Set up components
   loadCell.init();
-  container_servo.init();
   press.init();
-  press.setDirection(false);
   
   // Create init_options
   allocator = rcl_get_default_allocator();

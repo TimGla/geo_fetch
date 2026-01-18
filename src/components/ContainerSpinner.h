@@ -1,15 +1,14 @@
-#ifndef SERVOMOTOR_H
-#define SERVOMOTOR_H
+#ifndef CONTAINER_SPINNER_H
+#define CONTAINER_SPINNER_H
 
 #include <ESP32Servo.h>
 
-class ServoMotor {
+class ContainerSpinner {
 private:
     Servo servo;
 
 public:
-    ServoMotor(int sig_pin);
-    void init();
+    ContainerSpinner(int sig_pin);
     /**
      * We assume a 360 degree servo.
      * The parameter doesn't correspond to the angle but to the velocity:

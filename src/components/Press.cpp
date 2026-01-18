@@ -1,7 +1,7 @@
-#include "StepperMotor.h"
+#include "Press.h"
 #include <Arduino.h>
 
-StepperMotor::StepperMotor(
+Press::Press(
     int en_pin, 
     int step_pin, 
     int dir_pin,
@@ -12,7 +12,7 @@ StepperMotor::StepperMotor(
         this->en_pin = en_pin;
 }
 
-void StepperMotor::init() {
+void Press::init() {
     stepper.setEnablePin(en_pin);
     stepper.setPinsInverted(false, false, true);
     stepper.setMaxSpeed(speed);
@@ -21,24 +21,24 @@ void StepperMotor::init() {
     stepper.disableOutputs();
 }
 
-bool StepperMotor::isActive() {
+bool Press::isActive() {
     return active;
 }
 
-void StepperMotor::setDirection(bool direction) {
+void Press::setDirection(bool direction) {
+    active = true;
     stepper.enableOutputs();
     float _speed = direction ? speed : (-1 * speed);
     stepper.setCurrentPosition(0);
     stepper.setSpeed(_speed);
-    active = true;
 }
 
-void StepperMotor::press() {
+void Press::press() {
     stepper.runSpeed();
 }
 
 
-void StepperMotor::stop() {
+void Press::stop() {
     stepper.setSpeed(0);
     stepper.setCurrentPosition(0);
     stepper.disableOutputs();

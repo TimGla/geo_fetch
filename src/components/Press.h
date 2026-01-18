@@ -1,9 +1,9 @@
-#ifndef STEPPER_MOTOR_H
-#define STEPPER_MOTOR_H
+#ifndef Press_H
+#define Press_H
 
 #include <AccelStepper.h>
 
-class StepperMotor {
+class Press {
 private:
     AccelStepper stepper;
     float degrees_per_step;
@@ -13,7 +13,7 @@ private:
     int en_pin;
 
 public:
-    StepperMotor(
+    Press(
         int en_pin,
         int step_pin, 
         int dir_pin,
