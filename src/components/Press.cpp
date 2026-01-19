@@ -21,14 +21,11 @@ void Press::init() {
     stepper.disableOutputs();
 }
 
-bool Press::isActive() {
-    return active;
-}
-
-void Press::setDirection(bool direction) {
-    active = true;
+void Press::setDirection(PressDirection direction) {
+    bool pressUp = direction == PressDirection::UP;
+    status = pressUp ? PressStatus::PRESSING_UP : PressStatus::PRESSING_DOWN;
     stepper.enableOutputs();
-    float _speed = direction ? speed : (-1 * speed);
+    float _speed = pressUp ? speed : (-1 * speed);
     stepper.setCurrentPosition(0);
     stepper.setSpeed(_speed);
 }
@@ -39,8 +36,14 @@ void Press::press() {
 
 
 void Press::stop() {
+    if (status == PressStatus::IDLE) return;
     stepper.setSpeed(0);
     stepper.setCurrentPosition(0);
     stepper.disableOutputs();
-    active = false;
+    status = PressStatus::IDLE;
+}
+
+
+bool Press::isRunning() {
+    return status != PressStatus::IDLE;
 }

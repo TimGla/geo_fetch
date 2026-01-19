@@ -12,21 +12,21 @@ void Auger::init() {
 }
 
 void Auger::turnLeft() {
-    status = SPIN_LEFT;
+    status = AugerStatus::SPIN_LEFT;
     motorController.Enable();
     speed = maxSpeed;
     motorController.TurnLeft(speed);
 }
 
 void Auger::turnRight() {
-    status = SPIN_RIGHT;
+    status = AugerStatus::SPIN_RIGHT;
     motorController.Enable();
     speed = maxSpeed;
     motorController.TurnRight(speed);
 }
 
 void Auger::softStop() {
-    if (status == STOP) return;
+    if (status == AugerStatus::IDLE) return;
     while (speed != 0) { 
         speed >>= 1;
         if (speed == 0) break;
@@ -45,6 +45,10 @@ void Auger::stop() {
     speed = 0;
     motorController.Stop();
     motorController.Disable();
-    status = STOP;
+    status = AugerStatus::IDLE;
+}
+
+bool Auger::isRunning() {
+    return status != AugerStatus::IDLE;
 }
 

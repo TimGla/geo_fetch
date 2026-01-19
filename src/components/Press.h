@@ -3,14 +3,25 @@
 
 #include <AccelStepper.h>
 
+enum PressStatus {
+    IDLE,
+    PRESSING_DOWN,
+    PRESSING_UP
+};
+
+enum PressDirection {
+    UP,
+    DOWN
+};
+
 class Press {
 private:
     AccelStepper stepper;
     float degrees_per_step;
     float speed = 1000;
     long steps_per_revolution;
-    bool active = false;
     int en_pin;
+    PressStatus status = PressStatus::IDLE;
 
 public:
     Press(
@@ -21,8 +32,8 @@ public:
         AccelStepper::MotorInterfaceType motor_type = AccelStepper::MotorInterfaceType::DRIVER
     );
     void init();
-    bool isActive();
-    void setDirection(bool direction);
+    bool isRunning();
+    void setDirection(PressDirection direction);
     void press();
     void stop();
 };
