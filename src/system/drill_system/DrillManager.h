@@ -21,8 +21,8 @@ private:
     Press *press;
     EndSwitch *upperSwitch;
     EndSwitch *lowerSwitch;
-    DrillState state = DrillState::UNKNOWN;
     unsigned long cleanStartTime = 0;
+    DrillState state = DrillState::UNKNOWN;
 
     void homingProcess();
     void drillingProcess();
@@ -32,11 +32,11 @@ private:
 public:
     DrillManager(Auger *auger, Press *press, EndSwitch *upperSwitch, EndSwitch *lowerSwitch);
     void initState();
-    void update();
     void home();
     void drill();
     void retract();
     void clean();
+    void update();
     DrillState getState();
 };
 
