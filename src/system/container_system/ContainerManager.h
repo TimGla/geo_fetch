@@ -5,7 +5,7 @@
 #include <components/ContainerSpinner.h>
 #include <components/LoadCell.h>
 
-enum ContainerState {
+enum class ContainerState {
     UNKNOWN,
     CLOSING,
     CLOSED,

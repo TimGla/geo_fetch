@@ -6,7 +6,7 @@
 #include <components/EndSwitch.h>
 #include <components/Press.h>
 
-enum DrillState {
+enum class DrillState {
     UNKNOWN,
     READY,
     HOMING,

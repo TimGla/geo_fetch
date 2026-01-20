@@ -8,6 +8,7 @@ private:
 
 public:
     EndSwitch(int pin);
+    void init();
     bool isActive();
 };
 

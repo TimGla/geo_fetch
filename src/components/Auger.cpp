@@ -30,7 +30,7 @@ void Auger::softStop() {
     while (speed != 0) { 
         speed >>= 1;
         if (speed == 0) break;
-        if (status == SPIN_LEFT) {
+        if (status == AugerStatus::SPIN_LEFT) {
             motorController.TurnLeft(speed);
             delay(100);
             continue;

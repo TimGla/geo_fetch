@@ -3,13 +3,13 @@
 
 #include <AccelStepper.h>
 
-enum PressStatus {
+enum class PressStatus {
     IDLE,
     PRESSING_DOWN,
     PRESSING_UP
 };
 
-enum PressDirection {
+enum class PressDirection {
     UP,
     DOWN
 };

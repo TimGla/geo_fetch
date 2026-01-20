@@ -35,6 +35,7 @@ void ContainerManager::open() {
 void ContainerManager::collect() {
     if (state != ContainerState::READY) return;
     state = ContainerState::COLLECTING;
+    loadCell->tare();
     spinner->setMode(SpinMode::SPIN);
     spinner->setTarget(collectingTarget);
 }
@@ -42,6 +43,7 @@ void ContainerManager::collect() {
 void ContainerManager::smartCollect() {
     if (state != ContainerState::READY) return;
     state = ContainerState::SMART_COLLECTING;
+    loadCell->tare();
     spinner->setMode(SpinMode::SPIN);
     // TODO
 }

@@ -53,8 +53,6 @@ DrillState DrillManager::getState() {
 
 void DrillManager::update() {
     switch (state) {
-        case DrillState::READY:
-            break;
         case DrillState::HOMING:
             homingProcess();
             break;

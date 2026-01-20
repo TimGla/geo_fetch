@@ -3,12 +3,12 @@
 
 #include <AccelStepper.h>
 
-enum SpinMode {
+enum class SpinMode {
     SPIN, 
     RETURN
 };
 
-enum ContainerSpinnerStatus {
+enum class ContainerSpinnerStatus {
     IDLE,
     SPINNING,
     RETURNING,

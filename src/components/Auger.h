@@ -3,7 +3,7 @@
 
 #include <BTS7960.h>
 
-enum AugerStatus { 
+enum class AugerStatus { 
     SPIN_LEFT, 
     SPIN_RIGHT,
     IDLE,

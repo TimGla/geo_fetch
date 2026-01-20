@@ -1,4 +1,48 @@
 #include <Arduino.h>
+
+
+
+
+
+
+
+
+
+
+
+
+void setup() {
+
+}
+
+void loop() {
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/** 
+#include <Arduino.h>
 #include <micro_ros_platformio.h>
 #include <rcl/rcl.h>
 #include <std_srvs/srv/set_bool.h>
@@ -278,3 +322,5 @@ void loop() {
     press.press();
   }
 }
+
+*/
