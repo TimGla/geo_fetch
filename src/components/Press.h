@@ -16,12 +16,13 @@ enum PressDirection {
 
 class Press {
 private:
+    PressStatus status = PressStatus::IDLE;
     AccelStepper stepper;
+    
     float degrees_per_step;
     float speed = 1000;
     long steps_per_revolution;
     int en_pin;
-    PressStatus status = PressStatus::IDLE;
 
 public:
     Press(

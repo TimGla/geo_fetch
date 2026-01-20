@@ -7,12 +7,12 @@
 #include <components/Press.h>
 
 enum DrillState {
-    IDLE,
+    UNKNOWN,
+    READY,
     HOMING,
     DRILLING,
     RETRACTING,
     CLEANING,
-    ERROR,
 };
 
 class DrillManager {
@@ -21,7 +21,7 @@ private:
     Press *press;
     EndSwitch *upperSwitch;
     EndSwitch *lowerSwitch;
-    DrillState state = DrillState::IDLE;
+    DrillState state = DrillState::UNKNOWN;
     unsigned long cleanStartTime = 0;
 
     void homingProcess();
@@ -31,11 +31,13 @@ private:
 
 public:
     DrillManager(Auger *auger, Press *press, EndSwitch *upperSwitch, EndSwitch *lowerSwitch);
+    void initState();
     void update();
     void home();
     void drill();
     void retract();
     void clean();
+    DrillState getState();
 };
 
 #endif
