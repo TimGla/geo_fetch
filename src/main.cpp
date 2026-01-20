@@ -1,23 +1,138 @@
 #include <Arduino.h>
+#include <Config.h>
+#include "components/Auger.h"
+#include "components/Press.h"
+#include "components/EndSwitch.h"
+#include "components/ContainerSpinner.h"
+#include "components/LoadCell.h"
+#include "system/container_system/ContainerManager.h"
+#include "system/drill_system/DrillManager.h"
 
 
+// Drilling system hardware wrappers
+Auger *auger;
+Press *press;
+EndSwitch *upperSwitch;
+EndSwitch *lowerSwitch;
 
+// Container system hardware wrappers
+ContainerSpinner *spinner;
+LoadCell *loadCell;
+EndSwitch *homeSwitch;
 
-
-
-
-
-
-
-
+// Subystem managers
+DrillManager *drillSystem;
+ContainerManager *containerManager;
 
 void setup() {
-
+  initializeDrillSystem();
+  initializeContainerSystem();
 }
 
 void loop() {
 
 }
+
+
+
+
+
+
+void initializeDrillSystem() {
+  auger = new Auger(
+    DrillPins::AUGER_L_EN_PIN,
+    DrillPins::AUGER_R_EN_PIN,
+    DrillPins::AUGER_L_PWN_PIN,
+    DrillPins::AUGER_R_PWN_PIN
+  );
+
+  press = new Press(
+    DrillPins::PRESS_EN_PIN,
+    DrillPins::PRESS_STEP_PIN,
+    DrillPins::PRESS_DIR_PIN,
+    DrillSettings::PRESS_DEG_PER_STEP
+  );
+
+  upperSwitch = new EndSwitch(
+    DrillPins::UPPER_SWITCH_SIG_PIN
+  );
+
+  lowerSwitch = new EndSwitch(
+    DrillPins::LOWER_SWITCH_SIG_PIN
+  );
+
+  auger->init();
+  press->init();
+  upperSwitch->init();
+  lowerSwitch->init();
+
+}
+
+void initializeContainerSystem() {
+  spinner = new ContainerSpinner(
+    ContainerPins::SPINNER_EN_PIN,
+    ContainerPins::SPINNER_STEP_PIN,
+    ContainerPins::SPINNER_DIR_PIN,
+    ContainerSettings::SPINNER_DEG_PER_STEP,
+    ContainerSettings::SPINNER_MAX_SPEED
+  );
+
+  loadCell = new LoadCell(
+    ContainerPins::LOADCELL_DOUT_PIN,
+    ContainerPins::LOADCELL_SCK_PIN,
+    ContainerSettings::LOADCELL_CALIBRATION_FACTOR
+  );
+
+  homeSwitch = new EndSwitch(
+    ContainerPins::HOME_SWITCH_SIG_PIN
+  );
+
+  spinner->init();
+  loadCell->init();
+  homeSwitch->init();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
