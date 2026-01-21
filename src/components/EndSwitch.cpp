@@ -7,5 +7,5 @@ void EndSwitch::init() {
 }
 
 bool EndSwitch::isActive() {
-    return digitalRead(pin) == LOW;
+    return (digitalRead(pin) == LOW);
 }

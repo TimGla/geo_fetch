@@ -3,9 +3,8 @@
 DrillManager::DrillManager(
     Auger *auger,
     Press *press, 
-    EndSwitch *upperSwitch, 
-    EndSwitch *lowerSwitch)
-    : auger(auger), press(press), upperSwitch(upperSwitch), lowerSwitch(lowerSwitch) {
+    EndSwitch *upperSwitch
+) : auger(auger), press(press), upperSwitch(upperSwitch) {
 }
 
 void DrillManager::initState() {
@@ -28,6 +27,7 @@ void DrillManager::drill() {
     if (state != DrillState::READY) return;
     state = DrillState::DRILLING;
     auger->turnRight();
+    press->setTarget(DrillSettings::PRESS_DRILLING_TARGET);
     press->setDirection(PressDirection::DOWN);
 }
 
@@ -73,6 +73,7 @@ void DrillManager::update() {
 void DrillManager::homingProcess() {
     if (upperSwitch->isActive()) {
         press->stop();
+        press->setHome();
         state = DrillState::READY;
         return;
     }
@@ -80,10 +81,6 @@ void DrillManager::homingProcess() {
 }
 
 void DrillManager::drillingProcess() {
-    if (lowerSwitch->isActive()) {
-        press->stop();
-        return;
-    }
     press->press();
 }
 

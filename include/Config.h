@@ -3,11 +3,13 @@
 
 namespace DrillSettings {
     const unsigned long CLEAN_DURATION_MS = 10000;
+    const long PRESS_DRILLING_TARGET = 203000; 
+    const float PRESS_MAX_SPEED = 6400;
     const float PRESS_DEG_PER_STEP = 1.8;
 }
 
 namespace ContainerSettings {
-    const float SPINNER_MAX_SPEED = 100;
+    const float SPINNER_MAX_SPEED = 200;
     const float SPINNER_DEG_PER_STEP = 1.8;
     const float LOADCELL_CALIBRATION_FACTOR = 415.0;
 }
@@ -27,16 +29,16 @@ namespace ContainerPins {
 
 
 namespace DrillPins {
-    const int AUGER_L_EN_PIN = 0;
-    const int AUGER_R_EN_PIN = 0;
-    const int AUGER_L_PWN_PIN = 0;
-    const int AUGER_R_PWN_PIN = 0;
+    const int AUGER_L_EN_PIN = 12;
+    const int AUGER_R_EN_PIN = 13;
+    const int AUGER_L_PWN_PIN = 27;
+    const int AUGER_R_PWN_PIN = 14;
 
-    const int PRESS_EN_PIN = 0;
-    const int PRESS_STEP_PIN = 0;
-    const int PRESS_DIR_PIN = 0;
+    const int PRESS_EN_PIN = 26;
+    const int PRESS_STEP_PIN = 33;
+    const int PRESS_DIR_PIN = 25;
 
-    const int UPPER_SWITCH_SIG_PIN = 0;
+    const int UPPER_SWITCH_SIG_PIN = 35;
     const int LOWER_SWITCH_SIG_PIN = 0;
 }
 

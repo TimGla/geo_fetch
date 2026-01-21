@@ -13,7 +13,6 @@
 Auger *auger;
 Press *press;
 EndSwitch *upperSwitch;
-EndSwitch *lowerSwitch;
 
 // Container system hardware wrappers
 ContainerSpinner *spinner;
@@ -22,20 +21,9 @@ EndSwitch *homeSwitch;
 
 // Subystem managers
 DrillManager *drillSystem;
-ContainerManager *containerManager;
+ContainerManager *containerSystem;
 
-void setup() {
-  initializeDrillSystem();
-  initializeContainerSystem();
-}
-
-void loop() {
-
-}
-
-
-
-
+long startDrill = 0;
 
 
 void initializeDrillSystem() {
@@ -45,27 +33,30 @@ void initializeDrillSystem() {
     DrillPins::AUGER_L_PWN_PIN,
     DrillPins::AUGER_R_PWN_PIN
   );
-
+  
   press = new Press(
     DrillPins::PRESS_EN_PIN,
     DrillPins::PRESS_STEP_PIN,
     DrillPins::PRESS_DIR_PIN,
-    DrillSettings::PRESS_DEG_PER_STEP
+    DrillSettings::PRESS_DEG_PER_STEP,
+    DrillSettings::PRESS_MAX_SPEED
   );
-
+  
   upperSwitch = new EndSwitch(
     DrillPins::UPPER_SWITCH_SIG_PIN
   );
 
-  lowerSwitch = new EndSwitch(
-    DrillPins::LOWER_SWITCH_SIG_PIN
+  drillSystem = new DrillManager(
+    auger,
+    press,
+    upperSwitch
   );
 
   auger->init();
   press->init();
   upperSwitch->init();
-  lowerSwitch->init();
 
+  drillSystem->initState();
 }
 
 void initializeContainerSystem() {
@@ -91,6 +82,31 @@ void initializeContainerSystem() {
   loadCell->init();
   homeSwitch->init();
 }
+
+
+void setup() {
+  Serial.begin(115200);
+  initializeDrillSystem();
+  //initializeContainerSystem();
+}
+
+void loop() {
+  drillSystem->update();
+  if (drillSystem->getState() == DrillState::UNKNOWN) {
+    drillSystem->home();
+    return;
+  }
+  if (drillSystem->getState() == DrillState::READY) {
+    drillSystem->drill();
+    startDrill = millis();
+    return;
+  }
+  if (drillSystem->getState() == DrillState::DRILLING && millis() - startDrill >= 60000) {
+    drillSystem->retract();
+    return;
+  }
+}
+
 
 
 

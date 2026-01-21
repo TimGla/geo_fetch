@@ -20,7 +20,6 @@ private:
     Auger *auger;
     Press *press;
     EndSwitch *upperSwitch;
-    EndSwitch *lowerSwitch;
     unsigned long cleanStartTime = 0;
     DrillState state = DrillState::UNKNOWN;
 
@@ -30,7 +29,7 @@ private:
     void cleaningProcess();
 
 public:
-    DrillManager(Auger *auger, Press *press, EndSwitch *upperSwitch, EndSwitch *lowerSwitch);
+    DrillManager(Auger *auger, Press *press, EndSwitch *upperSwitch);
     void initState();
     void home();
     void drill();
