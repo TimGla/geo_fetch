@@ -42,7 +42,6 @@ namespace DrillPins {
     const int PRESS_DIR_PIN = 25;
 
     const int UPPER_SWITCH_SIG_PIN = 35;
-    const int LOWER_SWITCH_SIG_PIN = 0;
 }
 
 #endif
