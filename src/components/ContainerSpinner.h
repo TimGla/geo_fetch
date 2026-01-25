@@ -39,6 +39,7 @@ public:
     void setMode(SpinMode spinMode);
     void spin();
     void stop();
+    long getPosition();
     bool isRunning();
 };
 

@@ -4,10 +4,8 @@ ContainerManager::ContainerManager(
     ContainerSpinner *spinner,
     EndSwitch *homeSwitch,
     LoadCell *loadCell,
-    float targetWeight,
-    long openingTarget,
-    long collectingTarget
-): spinner(spinner), homeSwitch(homeSwitch),  loadCell(loadCell), targetWeight(targetWeight), openingTarget(openingTarget), collectingTarget(collectingTarget) {
+    unsigned int maxSamples
+): spinner(spinner), homeSwitch(homeSwitch),  loadCell(loadCell), maxSamples(maxSamples) {
 
 };
 
@@ -19,7 +17,9 @@ void ContainerManager::initiState() {
 }
 
 void ContainerManager::close() {
-    if (state != ContainerState::UNKNOWN && state != ContainerState::FINISHED) return;
+    if (state != ContainerState::UNKNOWN 
+        && state != ContainerState::CONTAINER_FULL
+        && state != ContainerState::READY) return;
     state = ContainerState::CLOSING;
     spinner->setMode(SpinMode::RETURN);
 }
@@ -32,20 +32,19 @@ void ContainerManager::open() {
     spinner->setTarget(openingTarget);
 }
 
-void ContainerManager::collect() {
+void ContainerManager::nextSample() {
     if (state != ContainerState::READY) return;
-    state = ContainerState::COLLECTING;
-    loadCell->tare();
+    state = ContainerState::REVOLVING;
     spinner->setMode(SpinMode::SPIN);
-    spinner->setTarget(collectingTarget);
+    spinner->setTarget(spinner->getPosition() + nextTargetPerCompartment);
 }
 
-void ContainerManager::smartCollect() {
-    if (state != ContainerState::READY) return;
-    state = ContainerState::SMART_COLLECTING;
-    loadCell->tare();
-    spinner->setMode(SpinMode::SPIN);
-    // TODO
+float ContainerManager::getWeightOfCurrentSample() {
+    return loadCell->getWeight();
+}
+
+ContainerState ContainerManager::getState() {
+    return state;
 }
 
 void ContainerManager::update() {
@@ -53,28 +52,22 @@ void ContainerManager::update() {
         case ContainerState::CLOSING:
             closingProcess();
             break;
-        case ContainerState::COLLECTING:
-            collectingProcess();
-            break;
         case ContainerState::OPENING:
             openingProcess();
             break;
-        case ContainerState::SMART_COLLECTING:
-            smartCollectingProcess();
+        case ContainerState::REVOLVING:
+            revolvingProcess();
             break;
         default:
             break;    
     }
 }
 
-void ContainerManager::smartCollectingProcess() {
-    // TODO
-}
-
-void ContainerManager::collectingProcess() {
-    if (!spinner->isRunning() || loadCell->getWeight() >= targetWeight) {
-        spinner->stop();
-        state = ContainerState::FINISHED;
+void ContainerManager::revolvingProcess() {
+    if (!spinner->isRunning()) {
+        currentSample++;
+        loadCell->tare();
+        state = currentSample < maxSamples ? ContainerState::READY : ContainerState::CONTAINER_FULL;
         return;
     }
     spinner->spin();
@@ -83,6 +76,8 @@ void ContainerManager::collectingProcess() {
 
 void ContainerManager::openingProcess() {
     if (!spinner->isRunning()) {
+        currentSample = 1;
+        loadCell->tare();
         state = ContainerState::READY;
         return;
     }
@@ -94,6 +89,7 @@ void ContainerManager::closingProcess() {
     if (homeSwitch->isActive()) {
         spinner->stop();
         spinner->setHome();
+        currentSample = 0;
         state = ContainerState::CLOSED;
         return;
     }

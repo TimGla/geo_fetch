@@ -12,6 +12,7 @@ enum class DrillState {
     HOMING,
     DRILLING,
     RETRACTING,
+    RETRIEVING,
     CLEANING,
 };
 
@@ -20,13 +21,11 @@ private:
     Auger *auger;
     Press *press;
     EndSwitch *upperSwitch;
-    unsigned long cleanStartTime = 0;
     DrillState state = DrillState::UNKNOWN;
 
     void homingProcess();
     void drillingProcess();
     void retractingProcess();
-    void cleaningProcess();
 
 public:
     DrillManager(Auger *auger, Press *press, EndSwitch *upperSwitch);
@@ -34,7 +33,10 @@ public:
     void home();
     void drill();
     void retract();
+    void retrieve();
+    void stopRetrieving();
     void clean();
+    void stopCleaning();
     void update();
     DrillState getState();
 };

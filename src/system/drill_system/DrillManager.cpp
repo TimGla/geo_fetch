@@ -38,13 +38,32 @@ void DrillManager::retract() {
     press->setDirection(PressDirection::UP);
 }
 
+void DrillManager::retrieve() {
+    if (state != DrillState::READY) return;
+    state = DrillState::RETRIEVING;
+    press->stop();
+    auger->softStop();
+    auger->turnRight();
+}
+
+void DrillManager::stopRetrieving() {
+    if (state != DrillState::RETRIEVING) return;
+    auger->softStop();
+    state = DrillState::READY;
+}
+
 void DrillManager::clean() {
     if (state != DrillState::READY) return;
     state = DrillState::CLEANING;
-    cleanStartTime = millis();
     press->stop();
     auger->softStop();
     auger->turnLeft();
+}
+
+void DrillManager::stopCleaning() {
+    if (state != DrillState::CLEANING) return;
+    auger->softStop();
+    state = DrillState::READY;
 }
 
 DrillState DrillManager::getState() {
@@ -61,9 +80,6 @@ void DrillManager::update() {
             break;
         case DrillState::RETRACTING:
             retractingProcess();
-            break;
-        case DrillState::CLEANING:
-            cleaningProcess();
             break;
         default:
             break;
@@ -91,12 +107,4 @@ void DrillManager::retractingProcess() {
         return;
     }
     press->press();
-}
-
-void DrillManager::cleaningProcess() {
-    if (millis() - cleanStartTime >= DrillSettings::CLEAN_DURATION_MS) {
-        auger->softStop();
-        state = DrillState::READY;
-        return;
-    }
 }

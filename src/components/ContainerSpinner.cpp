@@ -54,6 +54,10 @@ void ContainerSpinner::stop() {
     status = ContainerSpinnerStatus::IDLE;
 }
 
+long ContainerSpinner::getPosition() {
+    return stepper.currentPosition();
+}
+
 bool ContainerSpinner::isRunning() {
     return status != ContainerSpinnerStatus::IDLE;
 }

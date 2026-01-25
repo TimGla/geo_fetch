@@ -4,6 +4,7 @@
 #include <components/EndSwitch.h>
 #include <components/ContainerSpinner.h>
 #include <components/LoadCell.h>
+#include <Config.h>
 
 enum class ContainerState {
     UNKNOWN,
@@ -11,9 +12,8 @@ enum class ContainerState {
     CLOSED,
     OPENING,
     READY,
-    SMART_COLLECTING,
-    COLLECTING,
-    FINISHED,
+    REVOLVING,
+    CONTAINER_FULL,
 };
 
 class ContainerManager {
@@ -22,27 +22,32 @@ private:
     EndSwitch *homeSwitch;
     LoadCell *loadCell;
     ContainerState state = ContainerState::UNKNOWN;
-    
-    float targetWeight;
 
-    long openingTarget;
-    long collectingTarget;
+    unsigned int maxSamples;
+    unsigned int currentSample = 1;
+
+    long openingTarget = ContainerSettings::OPENING_TARGET;
+    long nextTargetPerCompartment = ContainerSettings::TARGET_PER_COMPARTMENT;
 
     void closingProcess();
     void openingProcess();
-    void smartCollectingProcess();
-    void collectingProcess();
+    void revolvingProcess();
 
 public:
-    ContainerManager(ContainerSpinner *spinner, EndSwitch *homeSwitch, LoadCell *loadCell, float targetWeight, long openingTarget, long collectingTarget);
+    ContainerManager(
+        ContainerSpinner *spinner, 
+        EndSwitch *homeSwitch, 
+        LoadCell *loadCell,
+        unsigned int maxSamples
+    );
     void initiState();
     void close();
     void open();
-    void collect();
-    void smartCollect();
+    void nextSample();
+
+    float getWeightOfCurrentSample();
     void update();
     ContainerState getState();
-
 };
 
 #endif
