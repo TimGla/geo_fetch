@@ -6,41 +6,60 @@ Press::Press(
     int step_pin, 
     int dir_pin,
     float deg_per_step,
+    float maxSpeed,
     AccelStepper::MotorInterfaceType type
-) : stepper(type, step_pin, dir_pin), degrees_per_step(deg_per_step) {
-        steps_per_revolution = round(360.0 / deg_per_step);
-        this->en_pin = en_pin;
+) : stepper(type, step_pin, dir_pin), degrees_per_step(deg_per_step), maxSpeed(maxSpeed), en_pin(en_pin) {
 }
 
 void Press::init() {
     stepper.setEnablePin(en_pin);
     stepper.setPinsInverted(false, false, true);
-    stepper.setMaxSpeed(speed);
-    stepper.setSpeed(0);
-    stepper.setCurrentPosition(0);
+    stepper.setMaxSpeed(maxSpeed);
+    stepper.setAcceleration(maxSpeed);
     stepper.disableOutputs();
 }
 
-bool Press::isActive() {
-    return active;
+void Press::setHome() {
+    stepper.setCurrentPosition(0);
 }
 
-void Press::setDirection(bool direction) {
-    active = true;
+void Press::setTarget(long target) {
+    stepper.moveTo(target);
+} 
+
+void Press::setDirection(PressDirection direction) {
     stepper.enableOutputs();
-    float _speed = direction ? speed : (-1 * speed);
-    stepper.setCurrentPosition(0);
-    stepper.setSpeed(_speed);
+    if (direction == PressDirection::DOWN) {
+        status = PressStatus::PRESSING_DOWN;
+        return;
+    }
+    stepper.setSpeed(-1 * maxSpeed);
+    status = PressStatus::PRESSING_UP;
 }
 
 void Press::press() {
+    if (status == PressStatus::PRESSING_DOWN) {
+        if (!stepper.run()) {
+            stop();
+        }
+        return;
+    }
     stepper.runSpeed();
 }
 
-
 void Press::stop() {
+    if (status == PressStatus::IDLE) return;
+    stepper.moveTo(stepper.currentPosition());
     stepper.setSpeed(0);
-    stepper.setCurrentPosition(0);
     stepper.disableOutputs();
-    active = false;
+    status = PressStatus::IDLE;
+}
+
+
+bool Press::isRunning() {
+    return status != PressStatus::IDLE;
+}
+
+long Press::getPos() {
+    return stepper.currentPosition();
 }

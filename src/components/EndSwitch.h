@@ -3,9 +3,12 @@
 
 #include <Arduino.h>
 class EndSwitch {
+private:    
     int pin;
 
+public:
     EndSwitch(int pin);
+    void init();
     bool isActive();
 };
 
