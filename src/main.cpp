@@ -7,6 +7,7 @@
 #include "components/LoadCell.h"
 #include "system/container_system/ContainerManager.h"
 #include "system/drill_system/DrillManager.h"
+#include "communication/RosManager.h"
 
 
 // Drilling system hardware wrappers
@@ -23,8 +24,32 @@ EndSwitch *homeSwitch;
 DrillManager *drillSystem;
 ContainerManager *containerSystem;
 
-long startDrill = 0;
+// Communiaction
+RosManager *ros;
 
+
+void initializeMicroRos() {
+  ros = new RosManager(20);
+  if (ros->init()) {
+    ros->registerService("/drill/home", [](std_srvs__srv__Trigger_Response* res) {
+      drillSystem->home();
+      static char res_msg[] = "Works du huansohn";
+      res->message.data = res_msg;
+      res->message.size = strlen(res_msg);
+      res->message.capacity = strlen(res_msg) + 1;
+      res->success = true;
+    });
+
+    ros->registerService("/drill/start", [](std_srvs__srv__Trigger_Response* res) {  
+      drillSystem->drill();
+      static char res_msg[] = "Works du huansohn";
+      res->message.data = res_msg;
+      res->message.size = strlen(res_msg);
+      res->message.capacity = strlen(res_msg) + 1;
+      res->success = true;
+    });
+  }
+}
 
 void initializeDrillSystem() {
   auger = new Auger(
@@ -88,26 +113,14 @@ void setup() {
   Serial.begin(115200);
   initializeDrillSystem();
   //initializeContainerSystem();
+  initializeMicroRos();
 }
 
 void loop() {
-  drillSystem->update();
-  if (drillSystem->getState() == DrillState::UNKNOWN) {
-    drillSystem->home();
-    return;
-  }
-  if (drillSystem->getState() == DrillState::READY) {
-    drillSystem->drill();
-    startDrill = millis();
-    return;
-  }
-  if (drillSystem->getState() == DrillState::DRILLING && millis() - startDrill >= 60000) {
-    drillSystem->retract();
-    return;
-  }
+  if (ros != NULL) ros->spin();
+  if (drillSystem != NULL) drillSystem->update();
+  if (containerSystem != NULL) containerSystem->update();
 }
-
-
 
 
 
@@ -173,6 +186,8 @@ void loop() {
 
 
 /** 
+
+
 #include <Arduino.h>
 #include <micro_ros_platformio.h>
 #include <rcl/rcl.h>
