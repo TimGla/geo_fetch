@@ -33,16 +33,61 @@ void initializeMicroRos() {
   if (ros->init()) {
     ros->registerService("/drill/home", [](std_srvs__srv__Trigger_Response* res) {
       drillSystem->home();
-      static char res_msg[] = "Works du huansohn";
+      static char res_msg[] = "Homing...";
       res->message.data = res_msg;
       res->message.size = strlen(res_msg);
       res->message.capacity = strlen(res_msg) + 1;
       res->success = true;
     });
 
-    ros->registerService("/drill/start", [](std_srvs__srv__Trigger_Response* res) {  
+    ros->registerService("/drill/drill", [](std_srvs__srv__Trigger_Response* res) {  
       drillSystem->drill();
-      static char res_msg[] = "Works du huansohn";
+      static char res_msg[] = "Drilling...";
+      res->message.data = res_msg;
+      res->message.size = strlen(res_msg);
+      res->message.capacity = strlen(res_msg) + 1;
+      res->success = true;
+    });
+
+    ros->registerService("/drill/retract", [](std_srvs__srv__Trigger_Response* res) {  
+      drillSystem->retract();
+      static char res_msg[] = "Retracting...";
+      res->message.data = res_msg;
+      res->message.size = strlen(res_msg);
+      res->message.capacity = strlen(res_msg) + 1;
+      res->success = true;
+    });
+
+    ros->registerService("/drill/retrieve", [](std_srvs__srv__Trigger_Response* res) {  
+      drillSystem->retrieve();
+      static char res_msg[] = "Retrieving...";
+      res->message.data = res_msg;
+      res->message.size = strlen(res_msg);
+      res->message.capacity = strlen(res_msg) + 1;
+      res->success = true;
+    });
+
+    ros->registerService("/drill/stopRetrieving", [](std_srvs__srv__Trigger_Response* res) {  
+      drillSystem->stopRetrieving();
+      static char res_msg[] = "Stopped retrieve";
+      res->message.data = res_msg;
+      res->message.size = strlen(res_msg);
+      res->message.capacity = strlen(res_msg) + 1;
+      res->success = true;
+    });
+    
+    ros->registerService("/drill/clean", [](std_srvs__srv__Trigger_Response* res) {  
+      drillSystem->clean();
+      static char res_msg[] = "Clearing...";
+      res->message.data = res_msg;
+      res->message.size = strlen(res_msg);
+      res->message.capacity = strlen(res_msg) + 1;
+      res->success = true;
+    });
+
+    ros->registerService("/drill/stopCleaning", [](std_srvs__srv__Trigger_Response* res) {  
+      drillSystem->stopCleaning();
+      static char res_msg[] = "Stopped cleaning";
       res->message.data = res_msg;
       res->message.size = strlen(res_msg);
       res->message.capacity = strlen(res_msg) + 1;
