@@ -29,7 +29,7 @@ private:
     long openingTarget = ContainerSettings::OPENING_TARGET;
     long nextTargetPerCompartment = ContainerSettings::TARGET_PER_COMPARTMENT;
 
-    void readyProcess();
+    void readyCheck();
     void closingProcess();
     void openingProcess();
     void revolvingProcess();

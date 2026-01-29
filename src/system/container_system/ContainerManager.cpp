@@ -49,8 +49,11 @@ ContainerState ContainerManager::getState() {
 
 void ContainerManager::update() {
     switch (state) {
+        case ContainerState::UNKNOWN:
+            readyCheck();
+            break;
         case ContainerState::READY:
-            readyProcess();
+            readyCheck();
             break;
         case ContainerState::CLOSING:
             closingProcess();
@@ -66,7 +69,7 @@ void ContainerManager::update() {
     }
 }
 
-void ContainerManager::readyProcess() {
+void ContainerManager::readyCheck() {
     if (!homeSwitch->isActive()) {
         state = ContainerState::UNKNOWN;
         return;

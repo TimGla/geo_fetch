@@ -23,7 +23,7 @@ private:
     EndSwitch *upperSwitch;
     DrillState state = DrillState::UNKNOWN;
 
-    void readyProcess();
+    void readyCheck();
     void homingProcess();
     void drillingProcess();
     void retractingProcess();
