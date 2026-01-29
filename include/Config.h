@@ -9,6 +9,8 @@ namespace DrillSettings {
 }
 
 namespace ContainerSettings {
+    const unsigned int NUM_COMPARTMENTS = 10;
+
     const float SPINNER_MAX_SPEED = 200;
     const float SPINNER_DEG_PER_STEP = 1.8;
     const float LOADCELL_CALIBRATION_FACTOR = 415.0;

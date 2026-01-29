@@ -49,6 +49,9 @@ ContainerState ContainerManager::getState() {
 
 void ContainerManager::update() {
     switch (state) {
+        case ContainerState::READY:
+            readyProcess();
+            break;
         case ContainerState::CLOSING:
             closingProcess();
             break;
@@ -61,6 +64,14 @@ void ContainerManager::update() {
         default:
             break;    
     }
+}
+
+void ContainerManager::readyProcess() {
+    if (!homeSwitch->isActive()) {
+        state = ContainerState::UNKNOWN;
+        return;
+    }
+    state = ContainerState::READY;
 }
 
 void ContainerManager::revolvingProcess() {

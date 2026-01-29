@@ -6,14 +6,14 @@
 #include <components/LoadCell.h>
 #include <Config.h>
 
-enum class ContainerState {
-    UNKNOWN,
-    CLOSING,
-    CLOSED,
-    OPENING,
-    READY,
-    REVOLVING,
-    CONTAINER_FULL,
+enum class ContainerState: u_int8_t {
+    UNKNOWN = 0,
+    CLOSING = 1,
+    CLOSED = 2,
+    OPENING = 3,
+    READY = 4,
+    REVOLVING = 5,
+    CONTAINER_FULL = 6,
 };
 
 class ContainerManager {
@@ -29,6 +29,7 @@ private:
     long openingTarget = ContainerSettings::OPENING_TARGET;
     long nextTargetPerCompartment = ContainerSettings::TARGET_PER_COMPARTMENT;
 
+    void readyProcess();
     void closingProcess();
     void openingProcess();
     void revolvingProcess();

@@ -6,14 +6,14 @@
 #include <components/EndSwitch.h>
 #include <components/Press.h>
 
-enum class DrillState {
-    UNKNOWN,
-    READY,
-    HOMING,
-    DRILLING,
-    RETRACTING,
-    RETRIEVING,
-    CLEANING,
+enum class DrillState: u_int8_t {
+    UNKNOWN = 0,
+    READY = 1,
+    HOMING = 2,
+    DRILLING = 3,
+    RETRACTING = 4,
+    RETRIEVING = 5,
+    CLEANING = 6,
 };
 
 class DrillManager {
@@ -23,6 +23,7 @@ private:
     EndSwitch *upperSwitch;
     DrillState state = DrillState::UNKNOWN;
 
+    void readyProcess();
     void homingProcess();
     void drillingProcess();
     void retractingProcess();
