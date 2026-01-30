@@ -105,7 +105,7 @@ void initializeMicroRos() {
     });
 
     ros->registerService("/container/open", [](std_srvs__srv__Trigger_Response* res) {  
-      containerSystem->close();
+      containerSystem->open();
       static char res_msg[] = "Opening...";
       res->message.data = res_msg;
       res->message.size = strlen(res_msg);
@@ -114,7 +114,7 @@ void initializeMicroRos() {
     });
 
     ros->registerService("/container/nextSample", [](std_srvs__srv__Trigger_Response* res) {  
-      containerSystem->close();
+      containerSystem->nextSample();
       static char res_msg[] = "Rotating...";
       res->message.data = res_msg;
       res->message.size = strlen(res_msg);
@@ -195,14 +195,26 @@ void initializeContainerSystem() {
 
 void setup() {
   Serial.begin(115200);
-  //initializeDrillSystem();
+  initializeDrillSystem();
   initializeContainerSystem();
-  //initializeMicroRos();
+  initializeMicroRos();
 }
 
-double drillTime = 0;
-
 void loop() {
+  if (ros != NULL) ros->spin();
+  if (drillSystem != NULL) {
+    drillSystem->update();
+    ros->setDrillState(drillSystem->getState());
+  }
+  if (containerSystem != NULL) {
+    containerSystem->update();
+    ros->setContainerState(containerSystem->getState());
+    ros->setWeight(0); // containerSystem->getWeightOfCurrentSample()
+  }
+}
+
+
+void containerTestLoop() {
   containerSystem->update();
   ContainerState state = containerSystem->getState();
   if (state == ContainerState::UNKNOWN) {
@@ -217,16 +229,4 @@ void loop() {
     delay(10000);
     containerSystem->close();
   }
-  /**
-  if (ros != NULL) ros->spin();
-  if (drillSystem != NULL) {
-    drillSystem->update();
-    ros->setDrillState(drillSystem->getState());
-  }
-  if (containerSystem != NULL) {
-    containerSystem->update();
-    ros->setContainerState(containerSystem->getState());
-    ros->setWeight(containerSystem->getWeightOfCurrentSample());
-  }
-    */
 }

@@ -37,7 +37,7 @@ void ContainerManager::open() {
 void ContainerManager::nextSample() {
     if (state != ContainerState::READY) return;
     state = ContainerState::REVOLVING;
-    spinner->setTarget(spinner->getPosition() + nextTargetPerCompartment);
+    spinner->setTarget(spinner->getPosition() + ContainerSettings::TARGET_PER_COMPARTMENT);
     spinner->setMode(SpinMode::SPIN);
 }
 

@@ -17,8 +17,8 @@ private:
 
 public:
     ServiceWrapper(
-        rcl_node_t* node, 
-        const char* service_name, 
+        rcl_node_t *node, 
+        const char *service_name, 
         std::function<void(std_srvs__srv__Trigger_Response*)> cb
     ) : callback(cb) {
         
@@ -29,16 +29,16 @@ public:
         );
     }
 
-    static void static_callback(const void* req, void* res, void* context) {
-        ServiceWrapper* self = (ServiceWrapper*)context;
-        std_srvs__srv__Trigger_Response* res_msg = (std_srvs__srv__Trigger_Response*)res;
+    static void static_callback(const void *req, void *res, void *context) {
+        ServiceWrapper *self = (ServiceWrapper*)context;
+        std_srvs__srv__Trigger_Response *res_msg = (std_srvs__srv__Trigger_Response*)res;
     
         if (self->callback) {
             self->callback(res_msg);
         }
     }
 
-    void addToExecutor(rclc_executor_t* executor) {
+    void addToExecutor(rclc_executor_t *executor) {
         rclc_executor_add_service_with_context(
             executor, &service, &request, &response,
             &ServiceWrapper::static_callback, this

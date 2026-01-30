@@ -26,9 +26,6 @@ private:
     unsigned int maxSamples;
     unsigned int currentSample = 1;
 
-    long openingTarget = ContainerSettings::OPENING_TARGET;
-    long nextTargetPerCompartment = ContainerSettings::TARGET_PER_COMPARTMENT;
-
     void readyCheck();
     void closingProcess();
     void openingProcess();
