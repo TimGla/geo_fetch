@@ -11,6 +11,7 @@ ContainerManager::ContainerManager(
 
 void ContainerManager::initiState() {
     if (homeSwitch->isActive()) {
+        spinner->stop();
         spinner->setHome();
         state = ContainerState::CLOSED;
     }
@@ -21,6 +22,7 @@ void ContainerManager::close() {
         && state != ContainerState::CONTAINER_FULL
         && state != ContainerState::READY) return;
     state = ContainerState::CLOSING;
+    spinner->stop();
     spinner->setMode(SpinMode::RETURN);
 }
 
@@ -28,15 +30,15 @@ void ContainerManager::close() {
 void ContainerManager::open() {
     if (state != ContainerState::CLOSED) return;
     state = ContainerState::OPENING;
+    spinner->setTarget(ContainerSettings::OPENING_TARGET);
     spinner->setMode(SpinMode::SPIN);
-    spinner->setTarget(openingTarget);
 }
 
 void ContainerManager::nextSample() {
     if (state != ContainerState::READY) return;
     state = ContainerState::REVOLVING;
-    spinner->setMode(SpinMode::SPIN);
     spinner->setTarget(spinner->getPosition() + nextTargetPerCompartment);
+    spinner->setMode(SpinMode::SPIN);
 }
 
 float ContainerManager::getWeightOfCurrentSample() {
@@ -50,9 +52,6 @@ ContainerState ContainerManager::getState() {
 void ContainerManager::update() {
     switch (state) {
         case ContainerState::UNKNOWN:
-            readyCheck();
-            break;
-        case ContainerState::READY:
             readyCheck();
             break;
         case ContainerState::CLOSING:
@@ -80,7 +79,7 @@ void ContainerManager::readyCheck() {
 void ContainerManager::revolvingProcess() {
     if (!spinner->isRunning()) {
         currentSample++;
-        loadCell->tare();
+        //loadCell->tare();
         state = currentSample < maxSamples ? ContainerState::READY : ContainerState::CONTAINER_FULL;
         return;
     }
@@ -91,7 +90,7 @@ void ContainerManager::revolvingProcess() {
 void ContainerManager::openingProcess() {
     if (!spinner->isRunning()) {
         currentSample = 1;
-        loadCell->tare();
+        //loadCell->tare();
         state = ContainerState::READY;
         return;
     }

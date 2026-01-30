@@ -186,7 +186,7 @@ void initializeContainerSystem() {
   );
 
   spinner->init();
-  loadCell->init();
+  //loadCell->init();
   homeSwitch->init();
 
   containerSystem->initiState();
@@ -195,12 +195,29 @@ void initializeContainerSystem() {
 
 void setup() {
   Serial.begin(115200);
-  initializeDrillSystem();
-  //initializeContainerSystem();
-  initializeMicroRos();
+  //initializeDrillSystem();
+  initializeContainerSystem();
+  //initializeMicroRos();
 }
 
+double drillTime = 0;
+
 void loop() {
+  containerSystem->update();
+  ContainerState state = containerSystem->getState();
+  if (state == ContainerState::UNKNOWN) {
+    containerSystem->close();
+  } else if (state == ContainerState::CLOSED) {
+    delay(5000);
+    containerSystem->open();
+  } else if (state == ContainerState::READY) {
+    delay(2000);
+    containerSystem->nextSample();
+  } else if (state == ContainerState::CONTAINER_FULL) {
+    delay(10000);
+    containerSystem->close();
+  }
+  /**
   if (ros != NULL) ros->spin();
   if (drillSystem != NULL) {
     drillSystem->update();
@@ -211,4 +228,5 @@ void loop() {
     ros->setContainerState(containerSystem->getState());
     ros->setWeight(containerSystem->getWeightOfCurrentSample());
   }
+    */
 }

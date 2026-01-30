@@ -15,6 +15,7 @@ void ContainerSpinner::init() {
     stepper.setEnablePin(en_pin);
     stepper.setPinsInverted(false, false, true);
     stepper.setMaxSpeed(maxSpeed);
+    stepper.setAcceleration(maxSpeed);
     stepper.disableOutputs();
 }
 

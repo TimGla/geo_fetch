@@ -11,6 +11,7 @@ void DrillManager::initState() {
     if (upperSwitch->isActive()) {
         auger->softStop();
         press->stop();
+        press->setHome();
         state = DrillState::READY;
     }
 }
@@ -75,9 +76,6 @@ void DrillManager::update() {
         case DrillState::UNKNOWN:
             readyCheck();
             break;
-        case DrillState::READY:
-            readyCheck();
-            break;
         case DrillState::HOMING:
             homingProcess();
             break;
@@ -117,6 +115,7 @@ void DrillManager::drillingProcess() {
 void DrillManager::retractingProcess() {
     if (upperSwitch->isActive()) {
         press->stop();
+        press->setHome();
         state = DrillState::READY;
         return;
     }
