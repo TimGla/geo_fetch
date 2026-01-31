@@ -1,280 +1,232 @@
 #include <Arduino.h>
-#include <micro_ros_platformio.h>
-#include <rcl/rcl.h>
-#include <std_srvs/srv/set_bool.h>
-#include <std_srvs/srv/trigger.h>
-#include <rclc/rclc.h>
-#include <rclc/executor.h>
-#include <std_msgs/msg/float32.h>
-#include <std_msgs/msg/bool.h>
-#include <std_msgs/msg/int32.h>
-#include <rmw_microros/rmw_microros.h>
-#include <components/LoadCell.h>
-#include <components/ContainerSpinner.h>
-#include <components/Press.h>
-
-#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
-#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
-
-// Globals
-const unsigned int num_handles = 4;
-const unsigned int timer_timeout = 1000;
-
-// Pins (Broken: 14)
-const int LOADCELL_DOUT_PIN = 4;
-const int LOADCELL_SCK_PIN  = 16;
-
-const int UPPER_END_STOP_SWITCH_PIN = 15;
-
-const int CONTAINER_SERVO_PIN = 5;
-
-const int PRESS_EN_PIN = 14;
-const int PRESS_DIR_PIN = 13;
-const int PRESS_STEP_PIN = 12;
-
-// Components
-LoadCell loadCell(
-  LOADCELL_DOUT_PIN, 
-  LOADCELL_SCK_PIN
-);
-ContainerSpinner container_servo(
-  CONTAINER_SERVO_PIN
-);
-Press press(
-  PRESS_EN_PIN,
-  PRESS_STEP_PIN,
-  PRESS_DIR_PIN,
-  1.8
-);
+#include <Config.h>
+#include "components/Auger.h"
+#include "components/Press.h"
+#include "components/EndSwitch.h"
+#include "components/ContainerSpinner.h"
+#include "components/LoadCell.h"
+#include "system/container_system/ContainerManager.h"
+#include "system/drill_system/DrillManager.h"
+#include "communication/RosManager.h"
 
 
+// Drilling system hardware wrappers
+Auger *auger;
+Press *press;
+EndSwitch *upperSwitch;
 
-// Node
-rcl_node_t node;
+// Container system hardware wrappers
+ContainerSpinner *spinner;
+LoadCell *loadCell;
+EndSwitch *homeSwitch;
 
+// Subystem managers
+DrillManager *drillSystem;
+ContainerManager *containerSystem;
 
-
-// Publishers:
-
-// Weight Publisher
-rcl_publisher_t weight_publisher;
-std_msgs__msg__Float32 weight_msg;
-
-// Upper End Stop Switch
-rcl_publisher_t upper_switch_publisher;
-std_msgs__msg__Bool upper_switch_msg;
-
-
-
-// Services:
-
-// Taring Service for scale
-rcl_service_t taring_service;
-std_srvs__srv__Trigger_Request taring_req_msg;
-std_srvs__srv__Trigger_Response taring_res_msg;
-
-// Press Service (0 for going down and 1 for going up)
-rcl_service_t start_press_service;
-std_srvs__srv__SetBool_Request start_press_req_msg;
-std_srvs__srv__SetBool_Response start_press_res_msg;
+// Communiaction
+RosManager *ros;
 
 
+void initializeMicroRos() {
+  ros = new RosManager(20);
+  if (ros->init()) {
+    ros->registerService("/drill/home", [](std_srvs__srv__Trigger_Response* res) {
+      drillSystem->home();
+      static char res_msg[] = "Homing...";
+      res->message.data = res_msg;
+      res->message.size = strlen(res_msg);
+      res->message.capacity = strlen(res_msg) + 1;
+      res->success = true;
+    });
+    
+    ros->registerService("/drill/drill", [](std_srvs__srv__Trigger_Response* res) {  
+      drillSystem->drill();
+      static char res_msg[] = "Drilling...";
+      res->message.data = res_msg;
+      res->message.size = strlen(res_msg);
+      res->message.capacity = strlen(res_msg) + 1;
+      res->success = true;
+    });
+    
+    ros->registerService("/drill/retract", [](std_srvs__srv__Trigger_Response* res) {  
+      drillSystem->retract();
+      static char res_msg[] = "Retracting...";
+      res->message.data = res_msg;
+      res->message.size = strlen(res_msg);
+      res->message.capacity = strlen(res_msg) + 1;
+      res->success = true;
+    });
 
-// Subscriptions:
+    
+    ros->registerService("/drill/retrieve", [](std_srvs__srv__Trigger_Response* res) {  
+      drillSystem->retrieve();
+      static char res_msg[] = "Retrieving...";
+      res->message.data = res_msg;
+      res->message.size = strlen(res_msg);
+      res->message.capacity = strlen(res_msg) + 1;
+      res->success = true;
+    });
 
-// Setting velocity of container servo
-rcl_subscription_t container_servo_velocity_sub;
-std_msgs__msg__Int32 container_servo_velocity_msg;
+    ros->registerService("/drill/stopRetrieving", [](std_srvs__srv__Trigger_Response* res) {  
+      drillSystem->stopRetrieving();
+      static char res_msg[] = "Stopped retrieve";
+      res->message.data = res_msg;
+      res->message.size = strlen(res_msg);
+      res->message.capacity = strlen(res_msg) + 1;
+      res->success = true;
+    });
+    
+    ros->registerService("/drill/clean", [](std_srvs__srv__Trigger_Response* res) {  
+      drillSystem->clean();
+      static char res_msg[] = "Clearing...";
+      res->message.data = res_msg;
+      res->message.size = strlen(res_msg);
+      res->message.capacity = strlen(res_msg) + 1;
+      res->success = true;
+    });
 
+    ros->registerService("/drill/stopCleaning", [](std_srvs__srv__Trigger_Response* res) {  
+      drillSystem->stopCleaning();
+      static char res_msg[] = "Stopped cleaning";
+      res->message.data = res_msg;
+      res->message.size = strlen(res_msg);
+      res->message.capacity = strlen(res_msg) + 1;
+      res->success = true;
+    });
 
+    ros->registerService("/container/close", [](std_srvs__srv__Trigger_Response* res) {  
+      containerSystem->close();
+      static char res_msg[] = "Closing...";
+      res->message.data = res_msg;
+      res->message.size = strlen(res_msg);
+      res->message.capacity = strlen(res_msg) + 1;
+      res->success = true;
+    });
 
-// Executor
-rclc_executor_t executor;
-rclc_support_t support;
-rcl_allocator_t allocator;
-rcl_timer_t timer;
+    ros->registerService("/container/open", [](std_srvs__srv__Trigger_Response* res) {  
+      containerSystem->open();
+      static char res_msg[] = "Opening...";
+      res->message.data = res_msg;
+      res->message.size = strlen(res_msg);
+      res->message.capacity = strlen(res_msg) + 1;
+      res->success = true;
+    });
 
+    ros->registerService("/container/nextSample", [](std_srvs__srv__Trigger_Response* res) {  
+      containerSystem->nextSample();
+      static char res_msg[] = "Rotating...";
+      res->message.data = res_msg;
+      res->message.size = strlen(res_msg);
+      res->message.capacity = strlen(res_msg) + 1;
+      res->success = true;
+    });
 
-void error_loop() {
-  while(1) {
-    delay(100);
+    ros->addPublishers();
   }
 }
 
-void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
-  if (timer != NULL) {
-    if (loadCell.isReady()) {
-      float current_weight = loadCell.getWeight();
-      weight_msg.data = current_weight;
-      RCSOFTCHECK(rcl_publish(&weight_publisher, &weight_msg, NULL));
-    } else {
-      weight_msg.data = -1.0;
-      RCSOFTCHECK(rcl_publish(&weight_publisher, &weight_msg, NULL));
-    }
-
-    bool upper_switch_status = (digitalRead(UPPER_END_STOP_SWITCH_PIN) == LOW);
-    upper_switch_msg.data = upper_switch_status;
-
-    if (upper_switch_status) {
-      //press.stop();
-    }
-
-    RCSOFTCHECK(rcl_publish(&upper_switch_publisher, &upper_switch_msg, NULL));
-  }
-}
-
-void start_press_callback(const void  *request, void *response) {
-  std_srvs__srv__SetBool_Response *res = (std_srvs__srv__SetBool_Response *) response;
-  std_srvs__srv__SetBool_Request *req = (std_srvs__srv__SetBool_Request *) request;
-  static char output_buffer[100];
-  press.setDirection(req->data);
-
-  const char* action = req->data ? "up" : "down";
-  snprintf(output_buffer, sizeof(output_buffer), "Moving %s", action);
-
-  res->success = true;
-  res->message.data = output_buffer;
-  res->message.size = strlen(output_buffer);
-  res->message.capacity = 100;
-}
-
-void tare_load_cell_callback(const void *request, void *response) {
-  std_srvs__srv__Trigger_Response *res = (std_srvs__srv__Trigger_Response *) response;
+void initializeDrillSystem() {
+  auger = new Auger(
+    DrillPins::AUGER_L_EN_PIN,
+    DrillPins::AUGER_R_EN_PIN,
+    DrillPins::AUGER_L_PWN_PIN,
+    DrillPins::AUGER_R_PWN_PIN
+  );
   
-  if (!loadCell.isReady()) {
-    res->success = false;
-    static char error_msg[] = "Error while calibrating scale";
-    res->message.data = error_msg;
-    res->message.size = strlen(error_msg);
-    res->message.capacity = strlen(error_msg) + 1;
-    return;
-  }
+  press = new Press(
+    DrillPins::PRESS_EN_PIN,
+    DrillPins::PRESS_STEP_PIN,
+    DrillPins::PRESS_DIR_PIN,
+    DrillSettings::PRESS_DEG_PER_STEP,
+    DrillSettings::PRESS_MAX_SPEED
+  );
   
-  loadCell.tare();
-  res->success = true;
-  static char success_msg[] = "Successfully calibrated scale";
-  res->message.data = success_msg;
-  res->message.size = strlen(success_msg);
-  res->message.capacity = strlen(success_msg) + 1;
+  upperSwitch = new EndSwitch(
+    DrillPins::UPPER_SWITCH_SIG_PIN
+  );
+
+  drillSystem = new DrillManager(
+    auger,
+    press,
+    upperSwitch
+  );
+
+  auger->init();
+  press->init();
+  upperSwitch->init();
+
+  drillSystem->initState();
 }
 
-void set_container_servo_velocity_callback(const void *msg_in) {
-  const std_msgs__msg__Int32 *direction_and_speed = (const std_msgs__msg__Int32 *)msg_in;
-  container_servo.setVelocity(direction_and_speed->data);
+void initializeContainerSystem() {
+  spinner = new ContainerSpinner(
+    ContainerPins::SPINNER_EN_PIN,
+    ContainerPins::SPINNER_STEP_PIN,
+    ContainerPins::SPINNER_DIR_PIN,
+    ContainerSettings::SPINNER_DEG_PER_STEP,
+    ContainerSettings::SPINNER_MAX_SPEED
+  );
+
+  loadCell = new LoadCell(
+    ContainerPins::LOADCELL_DOUT_PIN,
+    ContainerPins::LOADCELL_SCK_PIN,
+    ContainerSettings::LOADCELL_CALIBRATION_FACTOR
+  );
+
+  homeSwitch = new EndSwitch(
+    ContainerPins::HOME_SWITCH_SIG_PIN
+  );
+
+  containerSystem = new ContainerManager(
+    spinner,
+    homeSwitch,
+    loadCell,
+    ContainerSettings::NUM_COMPARTMENTS
+  );
+
+  spinner->init();
+  //loadCell->init();
+  homeSwitch->init();
+
+  containerSystem->initiState();
 }
+
 
 void setup() {
-  // Configure serial transport
   Serial.begin(115200);
-  set_microros_serial_transports(Serial);
-  delay(2000);
-
-  // Set up components
-  loadCell.init();
-  press.init();
-  
-  // Create init_options
-  allocator = rcl_get_default_allocator();
-  RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
-
-  // Create node
-  RCCHECK(rclc_node_init_default(
-    &node, 
-    "esp32", 
-    "", 
-    &support)
-  );
-
-  // Create load cell publisher
-  RCCHECK(rclc_publisher_init_default(
-    &weight_publisher,
-    &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32),
-    "current_weight")
-  );
-
-  // Create upper stop switch publisher
-  RCCHECK(rclc_publisher_init_default(
-    &upper_switch_publisher, &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool),
-    "upper_switch_state")
-  );
-
-
-
-  // Create press service
-  RCCHECK(rclc_service_init_default(
-    &start_press_service,
-    &node,
-    ROSIDL_GET_SRV_TYPE_SUPPORT(std_srvs, srv, SetBool),
-    "start_press")
-  );
-
-  // Create taring service
-  RCCHECK(rclc_service_init_default(
-    &taring_service,
-    &node,
-    ROSIDL_GET_SRV_TYPE_SUPPORT(std_srvs, srv, Trigger),
-    "tare_scale")
-  );
-
-  // Create timer (1000ms/ 1Hz)
-  RCCHECK(rclc_timer_init_default(
-    &timer,
-    &support,
-    RCL_MS_TO_NS(timer_timeout),
-    timer_callback)
-  );
-
-  // Create Subscription for container servo
-  RCCHECK(rclc_subscription_init_default(
-    &container_servo_velocity_sub,
-    &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
-    "container_servo_velocity")
-  );
-
-  // Create executor
-  RCCHECK(rclc_executor_init(
-    &executor, 
-    &support.context, 
-    num_handles, 
-    &allocator)
-  );
-  
-  // Add timer to executor
-  RCCHECK(rclc_executor_add_timer(&executor, &timer));
-
-  // Add stepper service to executor
-  RCCHECK(rclc_executor_add_service(
-    &executor,
-    &start_press_service,
-    &start_press_req_msg,
-    &start_press_res_msg,
-    start_press_callback)
-  );
-  
-  // Add callibration service to executor
-  RCCHECK(rclc_executor_add_service(
-    &executor,
-    &taring_service,
-    &taring_req_msg,
-    &taring_res_msg,
-    tare_load_cell_callback)
-  );
-
-  RCCHECK(rclc_executor_add_subscription(
-    &executor,
-    &container_servo_velocity_sub,
-    &container_servo_velocity_msg,
-    &set_container_servo_velocity_callback,
-    ON_NEW_DATA)
-  );
+  initializeDrillSystem();
+  initializeContainerSystem();
+  initializeMicroRos();
 }
 
 void loop() {
-  RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(1)));
-  if (press.isActive()) {
-    press.press();
+  if (ros != NULL) ros->spin();
+  if (drillSystem != NULL) {
+    drillSystem->update();
+    ros->setDrillState(drillSystem->getState());
+  }
+  if (containerSystem != NULL) {
+    containerSystem->update();
+    ros->setContainerState(containerSystem->getState());
+    ros->setWeight(0); // containerSystem->getWeightOfCurrentSample()
+  }
+}
+
+
+void containerTestLoop() {
+  containerSystem->update();
+  ContainerState state = containerSystem->getState();
+  if (state == ContainerState::UNKNOWN) {
+    containerSystem->close();
+  } else if (state == ContainerState::CLOSED) {
+    delay(5000);
+    containerSystem->open();
+  } else if (state == ContainerState::READY) {
+    delay(2000);
+    containerSystem->nextSample();
+  } else if (state == ContainerState::CONTAINER_FULL) {
+    delay(10000);
+    containerSystem->close();
   }
 }

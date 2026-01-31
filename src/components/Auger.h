@@ -3,16 +3,16 @@
 
 #include <BTS7960.h>
 
-enum AugerStatus { 
+enum class AugerStatus { 
     SPIN_LEFT, 
     SPIN_RIGHT,
-    STOP,
+    IDLE,
 };
 
 class Auger {
 private:
     BTS7960 motorController;
-    AugerStatus status = STOP;
+    AugerStatus status = AugerStatus::IDLE;
     uint8_t speed = 0;
     uint8_t maxSpeed = 255;
     
@@ -23,6 +23,7 @@ public:
     void turnRight();
     void softStop();
     void stop();
+    bool isRunning();
 };
 
 #endif
