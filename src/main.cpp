@@ -200,19 +200,16 @@ void setup() {
   initializeMicroRos();
 }
 
-void loop() {
-  if (ros != NULL) ros->spin();
-  if (drillSystem != NULL) {
-    drillSystem->update();
-    ros->setDrillState(drillSystem->getState());
-  }
-  if (containerSystem != NULL) {
-    containerSystem->update();
-    ros->setContainerState(containerSystem->getState());
-    ros->setWeight(0); // containerSystem->getWeightOfCurrentSample()
+
+void drillTestLoop() {
+  drillSystem->update();
+  DrillState state = drillSystem->getState();
+  if (state == DrillState::UNKNOWN) {
+    drillSystem->home();
+  } else if (state == DrillState::READY) {
+    drillSystem->drill();
   }
 }
-
 
 void containerTestLoop() {
   containerSystem->update();
@@ -228,5 +225,18 @@ void containerTestLoop() {
   } else if (state == ContainerState::CONTAINER_FULL) {
     delay(10000);
     containerSystem->close();
+  }
+}
+
+void loop() {
+  if (ros != NULL) ros->spin();
+  if (drillSystem != NULL) {
+    drillSystem->update();
+    ros->setDrillState(drillSystem->getState());
+  }
+  if (containerSystem != NULL) {
+    containerSystem->update();
+    ros->setContainerState(containerSystem->getState());
+    ros->setWeight(0); // containerSystem->getWeightOfCurrentSample()
   }
 }

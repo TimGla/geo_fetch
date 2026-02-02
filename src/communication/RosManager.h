@@ -81,13 +81,13 @@ public:
         publishing_timer = rcl_get_zero_initialized_timer();
         rclc_timer_init_default(
             &publishing_timer, &support,
-            RCL_MS_TO_NS(100), timer_callback);
+            RCL_MS_TO_NS(2000), timer_callback);
 
         rclc_executor_add_timer(&executor, &publishing_timer);
     }
 
     void spin() {
-        rclc_executor_spin_some(&executor, RCL_MS_TO_NS(10));
+        rclc_executor_spin_some(&executor, RCL_MS_TO_NS(0));
     }
 
     static void timer_callback(rcl_timer_t *timer, int64_t last_call) {
