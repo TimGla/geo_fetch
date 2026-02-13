@@ -19,7 +19,8 @@ private:
     AccelStepper stepper;
     PressStatus status = PressStatus::IDLE;
     
-    float maxSpeed;
+    float max_down_speed;
+    float max_up_speed;
     float degrees_per_step;
     int en_pin;
 
@@ -29,7 +30,8 @@ public:
         int step_pin, 
         int dir_pin,
         float deg_per_step,
-        float maxSpeed,
+        float max_drilling_speed,
+        float max_retracting_speed,
         AccelStepper::MotorInterfaceType motor_type = AccelStepper::MotorInterfaceType::DRIVER
     );
 

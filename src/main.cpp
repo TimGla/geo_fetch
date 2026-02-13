@@ -112,10 +112,19 @@ void initializeMicroRos() {
       res->message.capacity = strlen(res_msg) + 1;
       res->success = true;
     });
-
+    
     ros->registerService("/container/nextSample", [](std_srvs__srv__Trigger_Response* res) {  
       containerSystem->nextSample();
       static char res_msg[] = "Rotating...";
+      res->message.data = res_msg;
+      res->message.size = strlen(res_msg);
+      res->message.capacity = strlen(res_msg) + 1;
+      res->success = true;
+    });
+
+    ros->registerService("/container/tare", [](std_srvs__srv__Trigger_Response* res) {  
+      containerSystem->tareLoadCell();
+      static char res_msg[] = "Tared loadcell";
       res->message.data = res_msg;
       res->message.size = strlen(res_msg);
       res->message.capacity = strlen(res_msg) + 1;
@@ -139,7 +148,8 @@ void initializeDrillSystem() {
     DrillPins::PRESS_STEP_PIN,
     DrillPins::PRESS_DIR_PIN,
     DrillSettings::PRESS_DEG_PER_STEP,
-    DrillSettings::PRESS_MAX_SPEED
+    DrillSettings::PRESS_MAX_DRILLING_SPEED,
+    DrillSettings::PRESS_MAX_RETRACTING_SPEED
   );
   
   upperSwitch = new EndSwitch(
@@ -186,7 +196,7 @@ void initializeContainerSystem() {
   );
 
   spinner->init();
-  //loadCell->init();
+  loadCell->init();
   homeSwitch->init();
 
   containerSystem->initiState();
@@ -237,6 +247,10 @@ void loop() {
   if (containerSystem != NULL) {
     containerSystem->update();
     ros->setContainerState(containerSystem->getState());
-    ros->setWeight(0); // containerSystem->getWeightOfCurrentSample()
+    if (containerSystem->getState() == ContainerState::READY && drillSystem->getState() == DrillState::RETRIEVING) {
+      ros->setWeight(containerSystem->getWeightOfCurrentSample());
+    } else {
+      ros->setWeight(0);
+    }
   }
 }

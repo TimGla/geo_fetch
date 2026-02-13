@@ -41,6 +41,10 @@ void ContainerManager::nextSample() {
     spinner->setMode(SpinMode::SPIN);
 }
 
+void ContainerManager::tareLoadCell() {
+    loadCell->tare();
+}
+
 float ContainerManager::getWeightOfCurrentSample() {
     return loadCell->getWeight();
 }

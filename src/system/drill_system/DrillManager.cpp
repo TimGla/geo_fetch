@@ -27,7 +27,7 @@ void DrillManager::home() {
 void DrillManager::drill() {
     if (state != DrillState::READY) return;
     state = DrillState::DRILLING;
-    auger->turnRight();
+    auger->turnRight(DrillSettings::AUGER_DRILL_SPEED);
     press->setTarget(DrillSettings::PRESS_DRILLING_TARGET);
     press->setDirection(PressDirection::DOWN);
 }
@@ -44,7 +44,7 @@ void DrillManager::retrieve() {
     state = DrillState::RETRIEVING;
     press->stop();
     auger->softStop();
-    auger->turnRight();
+    auger->turnRight(DrillSettings::AUGER_RETRIEVE_SPEED);
 }
 
 void DrillManager::stopRetrieving() {
@@ -58,7 +58,7 @@ void DrillManager::clean() {
     state = DrillState::CLEANING;
     press->stop();
     auger->softStop();
-    auger->turnLeft();
+    auger->turnLeft(DrillSettings::AUGER_RETRIEVE_SPEED);
 }
 
 void DrillManager::stopCleaning() {

@@ -13,17 +13,17 @@ void Auger::init() {
     stop();
 }
 
-void Auger::turnLeft() {
+void Auger::turnLeft(uint8_t speed) {
     status = AugerStatus::SPIN_LEFT;
     motorController.Enable();
-    speed = maxSpeed;
+    this->speed = speed;
     motorController.TurnLeft(speed);
 }
 
-void Auger::turnRight() {
+void Auger::turnRight(uint8_t speed) {
     status = AugerStatus::SPIN_RIGHT;
     motorController.Enable();
-    speed = maxSpeed;
+    this->speed = speed;
     motorController.TurnRight(speed);
 }
 
