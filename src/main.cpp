@@ -103,15 +103,6 @@ void initializeMicroRos() {
       res->message.capacity = strlen(res_msg) + 1;
       res->success = true;
     });
-
-    ros->registerService("/container/open", [](std_srvs__srv__Trigger_Response* res) {  
-      containerSystem->open();
-      static char res_msg[] = "Opening...";
-      res->message.data = res_msg;
-      res->message.size = strlen(res_msg);
-      res->message.capacity = strlen(res_msg) + 1;
-      res->success = true;
-    });
     
     ros->registerService("/container/nextSample", [](std_srvs__srv__Trigger_Response* res) {  
       containerSystem->nextSample();
@@ -210,34 +201,6 @@ void setup() {
   initializeMicroRos();
 }
 
-
-void drillTestLoop() {
-  drillSystem->update();
-  DrillState state = drillSystem->getState();
-  if (state == DrillState::UNKNOWN) {
-    drillSystem->home();
-  } else if (state == DrillState::READY) {
-    drillSystem->drill();
-  }
-}
-
-void containerTestLoop() {
-  containerSystem->update();
-  ContainerState state = containerSystem->getState();
-  if (state == ContainerState::UNKNOWN) {
-    containerSystem->close();
-  } else if (state == ContainerState::CLOSED) {
-    delay(5000);
-    containerSystem->open();
-  } else if (state == ContainerState::READY) {
-    delay(2000);
-    containerSystem->nextSample();
-  } else if (state == ContainerState::CONTAINER_FULL) {
-    delay(10000);
-    containerSystem->close();
-  }
-}
-
 void loop() {
   if (ros != NULL) ros->spin();
   if (drillSystem != NULL) {
@@ -249,8 +212,6 @@ void loop() {
     ros->setContainerState(containerSystem->getState());
     if (containerSystem->getState() == ContainerState::READY && drillSystem->getState() == DrillState::RETRIEVING) {
       ros->setWeight(containerSystem->getWeightOfCurrentSample());
-    } else {
-      ros->setWeight(0);
     }
   }
 }

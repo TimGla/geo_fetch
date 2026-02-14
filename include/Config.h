@@ -18,10 +18,10 @@ namespace ContainerSettings {
 
     const float SPINNER_MAX_SPEED = 640;
     const float SPINNER_DEG_PER_STEP = 1.8;
-    const float LOADCELL_CALIBRATION_FACTOR = 415.0;
+    const float LOADCELL_CALIBRATION_FACTOR = 903.0;
 
-    const long OPENING_TARGET = 1950;
-    const long TARGET_PER_COMPARTMENT = 2150;
+    // Totoal rotation 10550
+    const long TARGET_PER_COMPARTMENT = 10550 / NUM_COMPARTMENTS;
 }
 
 

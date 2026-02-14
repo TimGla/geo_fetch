@@ -10,7 +10,7 @@ LoadCell::LoadCell(
 
 void LoadCell::init() {
     scale.begin(dout_pin, sck_pin);
-    scale.set_scale(903);
+    scale.set_scale(calibration_factor);
     scale.tare();
 }
 
