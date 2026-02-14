@@ -258,7 +258,7 @@ void setup() {
 void loop() {
   if (ros != NULL) ros->spin();
 
-  if (drillSystem != NULL && containerSystem != NULL && system != NULL) {
+  if (drillSystem != NULL && containerSystem != NULL && geoFetchsystem != NULL) {
     geoFetchsystem->update();
     drillSystem->update();
     containerSystem->update();
