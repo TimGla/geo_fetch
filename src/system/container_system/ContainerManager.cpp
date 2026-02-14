@@ -39,6 +39,19 @@ void ContainerManager::nextSample() {
     spinner->setMode(SpinMode::SPIN);
 }
 
+void ContainerManager::reset() {
+    if (state != ContainerState::CLOSED 
+    && state != ContainerState::CONTAINER_FULL
+    && state != ContainerState::READY) return;
+
+    if (state == ContainerState::CLOSED) {
+        currentSample = 0;
+        return;
+    }
+    currentSample = 0;
+    close();
+}
+
 void ContainerManager::tareLoadCell() {
     loadCell->tare();
 }

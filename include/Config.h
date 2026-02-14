@@ -1,8 +1,16 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+
+namespace SystemSettings {
+    const unsigned long DRILLING_DURATION = 100000; //ms
+    const unsigned long CLEAN_DURATION = 10000;
+    const unsigned long RETRIEVING_TIMEOUT = 60000;
+
+    const float TARGET_WEIGHT = 15.0;
+}
+
 namespace DrillSettings {
-    const unsigned long CLEAN_DURATION_MS = 10000;
 
     const int AUGER_DRILL_SPEED = 71;
     const int AUGER_RETRIEVE_SPEED = 255;

@@ -39,6 +39,7 @@ public:
     void initiState();
     void close();
     void nextSample();
+    void reset();
     void tareLoadCell();
     float getWeightOfCurrentSample();
     void update();
