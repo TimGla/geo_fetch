@@ -1,8 +1,16 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+
+namespace SystemSettings {
+    const unsigned long DRILLING_DURATION = 100000; //ms
+    const unsigned long CLEAN_DURATION = 10000;
+    const unsigned long RETRIEVING_TIMEOUT = 60000;
+
+    const float TARGET_WEIGHT = 15.0;
+}
+
 namespace DrillSettings {
-    const unsigned long CLEAN_DURATION_MS = 10000;
 
     const int AUGER_DRILL_SPEED = 71;
     const int AUGER_RETRIEVE_SPEED = 255;
@@ -18,10 +26,10 @@ namespace ContainerSettings {
 
     const float SPINNER_MAX_SPEED = 640;
     const float SPINNER_DEG_PER_STEP = 1.8;
-    const float LOADCELL_CALIBRATION_FACTOR = 415.0;
+    const float LOADCELL_CALIBRATION_FACTOR = 903.0;
 
-    const long OPENING_TARGET = 1950;
-    const long TARGET_PER_COMPARTMENT = 2150;
+    // Totoal rotation 10550
+    const long TARGET_PER_COMPARTMENT = 10550 / NUM_COMPARTMENTS;
 }
 
 

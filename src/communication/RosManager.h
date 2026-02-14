@@ -32,6 +32,7 @@ private:
     std::vector<ServiceWrapper*> services;
     Publisher<std_msgs__msg__Int8> drillStatePublisher;
     Publisher<std_msgs__msg__Int8> containerStatePublisher;
+    Publisher<std_msgs__msg__Int8> systemStatePublisher;
     Publisher<std_msgs__msg__Float32> weightPublisher;
 
 
@@ -73,6 +74,11 @@ public:
             &containerStatePublisher.publisher, &node,
             ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int8), "container/state");
 
+        systemStatePublisher.publisher = rcl_get_zero_initialized_publisher();
+        rclc_publisher_init_default(
+            &systemStatePublisher.publisher, &node,
+            ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int8), "system/state");    
+
         weightPublisher.publisher = rcl_get_zero_initialized_publisher();
         rclc_publisher_init_default(
             &weightPublisher.publisher, &node,
@@ -97,6 +103,9 @@ public:
         
         rcl_publish(&instance->containerStatePublisher.publisher, 
                     &instance->containerStatePublisher.message, NULL);
+
+        rcl_publish(&instance->systemStatePublisher.publisher, 
+                    &instance->systemStatePublisher.message, NULL);
         
         rcl_publish(&instance->weightPublisher.publisher, 
                     &instance->weightPublisher.message, NULL);
@@ -105,9 +114,15 @@ public:
     void setDrillState(DrillState state) { 
         drillStatePublisher.message.data = static_cast<uint8_t>(state); 
     }
+
     void setContainerState(ContainerState state) { 
-        containerStatePublisher.message.data = static_cast<uint8_t>(state); ; 
+        containerStatePublisher.message.data = static_cast<uint8_t>(state);
     }
+
+    void setSystemState(SystemState state) { 
+        systemStatePublisher.message.data = static_cast<uint8_t>(state);
+    }
+    
     void setWeight(float weight) {
          weightPublisher.message.data = weight; 
     }

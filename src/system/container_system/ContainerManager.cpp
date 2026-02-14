@@ -21,24 +21,35 @@ void ContainerManager::close() {
     if (state != ContainerState::UNKNOWN 
         && state != ContainerState::CONTAINER_FULL
         && state != ContainerState::READY) return;
+
+    if (state == ContainerState::CONTAINER_FULL) {
+        currentSample = 0;
+    }
     state = ContainerState::CLOSING;
     spinner->stop();
     spinner->setMode(SpinMode::RETURN);
 }
 
-
-void ContainerManager::open() {
+void ContainerManager::nextSample() {
     if (state != ContainerState::CLOSED) return;
-    state = ContainerState::OPENING;
-    spinner->setTarget(ContainerSettings::OPENING_TARGET);
+    state = ContainerState::REVOLVING;
+    spinner->setTarget(
+        spinner->getPosition() + (++currentSample * ContainerSettings::TARGET_PER_COMPARTMENT)
+    );
     spinner->setMode(SpinMode::SPIN);
 }
 
-void ContainerManager::nextSample() {
-    if (state != ContainerState::READY) return;
-    state = ContainerState::REVOLVING;
-    spinner->setTarget(spinner->getPosition() + ContainerSettings::TARGET_PER_COMPARTMENT);
-    spinner->setMode(SpinMode::SPIN);
+void ContainerManager::reset() {
+    if (state != ContainerState::CLOSED 
+    && state != ContainerState::CONTAINER_FULL
+    && state != ContainerState::READY) return;
+
+    if (state == ContainerState::CLOSED) {
+        currentSample = 0;
+        return;
+    }
+    currentSample = 0;
+    close();
 }
 
 void ContainerManager::tareLoadCell() {
@@ -61,9 +72,6 @@ void ContainerManager::update() {
         case ContainerState::CLOSING:
             closingProcess();
             break;
-        case ContainerState::OPENING:
-            openingProcess();
-            break;
         case ContainerState::REVOLVING:
             revolvingProcess();
             break;
@@ -82,20 +90,7 @@ void ContainerManager::readyCheck() {
 
 void ContainerManager::revolvingProcess() {
     if (!spinner->isRunning()) {
-        currentSample++;
-        //loadCell->tare();
         state = currentSample < maxSamples ? ContainerState::READY : ContainerState::CONTAINER_FULL;
-        return;
-    }
-    spinner->spin();
-}
-
-
-void ContainerManager::openingProcess() {
-    if (!spinner->isRunning()) {
-        currentSample = 1;
-        //loadCell->tare();
-        state = ContainerState::READY;
         return;
     }
     spinner->spin();
@@ -106,7 +101,6 @@ void ContainerManager::closingProcess() {
     if (homeSwitch->isActive()) {
         spinner->stop();
         spinner->setHome();
-        currentSample = 0;
         state = ContainerState::CLOSED;
         return;
     }
