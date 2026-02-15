@@ -33,30 +33,31 @@ namespace ContainerSettings {
 }
 
 
+
 namespace ContainerPins {
-    const int SPINNER_EN_PIN = 12;
-    const int SPINNER_STEP_PIN = 14;
-    const int SPINNER_DIR_PIN = 27;
+    const int SPINNER_EN_PIN = 25;
+    const int SPINNER_DIR_PIN = 26;
+    const int SPINNER_STEP_PIN = 27;
 
-    const int LOADCELL_DOUT_PIN = 35;
-    const int LOADCELL_SCK_PIN = 32;
+    const int LOADCELL_DOUT_PIN = 35; // green
+    const int LOADCELL_SCK_PIN = 32; // orange
 
-    const int HOME_SWITCH_SIG_PIN = 26;
+    const int HOME_SWITCH_SIG_PIN = 33;
 }
 
 
 
 namespace DrillPins {
-    const int AUGER_L_EN_PIN = 15;
-    const int AUGER_R_EN_PIN = 2;
-    const int AUGER_L_PWN_PIN = 16;
-    const int AUGER_R_PWN_PIN = 4;
+    const int AUGER_L_EN_PIN = 18;
+    const int AUGER_R_EN_PIN = 5;
+    const int AUGER_L_PWN_PIN = 17;
+    const int AUGER_R_PWN_PIN = 16;
 
-    const int PRESS_EN_PIN = 34;
-    const int PRESS_STEP_PIN = 33;
-    const int PRESS_DIR_PIN = 25;
+    const int PRESS_EN_PIN = 14;
+    const int PRESS_DIR_PIN = 12;
+    const int PRESS_STEP_PIN = 13;
 
-    const int UPPER_SWITCH_SIG_PIN = 39;
+    const int UPPER_SWITCH_SIG_PIN = 23;
 }
 
 #endif
