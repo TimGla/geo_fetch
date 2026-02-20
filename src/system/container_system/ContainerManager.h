@@ -10,10 +10,9 @@ enum class ContainerState: u_int8_t {
     UNKNOWN = 0,
     CLOSING = 1,
     CLOSED = 2,
-    OPENING = 3,
-    READY = 4,
-    REVOLVING = 5,
-    CONTAINER_FULL = 6,
+    READY = 3,
+    REVOLVING = 4,
+    CONTAINER_FULL = 5,
 };
 
 class ContainerManager {
@@ -23,12 +22,11 @@ private:
     LoadCell *loadCell;
     ContainerState state = ContainerState::UNKNOWN;
 
-    unsigned int maxSamples;
-    unsigned int currentSample = 1;
+    unsigned long maxSamples;
+    unsigned long currentSample = 0;
 
     void readyCheck();
     void closingProcess();
-    void openingProcess();
     void revolvingProcess();
 
 public:
@@ -40,8 +38,8 @@ public:
     );
     void initiState();
     void close();
-    void open();
     void nextSample();
+    void reset();
     void tareLoadCell();
     float getWeightOfCurrentSample();
     void update();

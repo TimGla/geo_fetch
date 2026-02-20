@@ -8,65 +8,130 @@ GeoFetchSystem::GeoFetchSystem(
 }
 
 void GeoFetchSystem::prepareSystem() {
-    if (state != SystemState::UNKNOWN && state != SystemState::FINISHED) return;
+    if (state != SystemState::UNKNOWN && state != SystemState::PREPARING) return;
+    
     state = SystemState::PREPARING;
 
-    // Determine state of subsystems
-    containerSystem->initiState();
-    drillSystem->initState();
-    
-    // Start first step of preperation of container system
-    if (containerSystem->getState() == ContainerState::UNKNOWN) {
+    if (containerSystem->getState() != ContainerState::CLOSED) {
         containerSystem->close();
-    } else if (containerSystem->getState() == ContainerState::CLOSED) {
-        containerSystem->open();
-    } else {
-        state = SystemState::ERROR;
-        return;
     }
 
-    // Start first step of preperation of drill system
     if (drillSystem->getState() == DrillState::UNKNOWN) {
         drillSystem->home();
-    } else if (drillSystem->getState() != DrillState::READY) {
-        state = SystemState::ERROR;
-        return;
+    } else if (drillSystem->getState() == DrillState::DRILLING) {
+        drillSystem->retract();
+    } else if (drillSystem->getState() == DrillState::CLEANING) {
+        drillSystem->stopCleaning();
+    } else if (drillSystem->getState() == DrillState::RETRIEVING) {
+        drillSystem->stopRetrieving();
     }
 }
 
-void GeoFetchSystem::takeSample() {
+void GeoFetchSystem::drill() {
     if (state != SystemState::READY) return;
-    state = SystemState::TAKING_SAMPLE;
+    state = SystemState::DRILLING;
+    drillStartTime = millis();
     drillSystem->drill();
 }
 
-void GeoFetchSystem::takingSampleProcess() {
-    // TODO (At what time start collecting?)
+
+void GeoFetchSystem::collectMaterial() {
+    if (state != SystemState::READY) return;
+
+    state = SystemState::COLLECTING_MATERIAL;
+
+    containerSystem->nextSample();
 }
 
-void GeoFetchSystem::preparingProcess() {
-    if (containerSystem->getState() == ContainerState::READY && drillSystem->getState() == DrillState::READY) {
+void GeoFetchSystem::drillProcess() {
+    if (drillSystem->getState() == DrillState::READY) {
         state = SystemState::READY;
         return;
     }
-    if (containerSystem->getState() == ContainerState::CLOSED) {
-        containerSystem->open();
+
+    if (drillSystem->getState() == DrillState::DRILLING 
+        && millis() - drillStartTime >= SystemSettings::DRILLING_DURATION
+    ) {
+        drillSystem->retract();
     }
 }
 
 
+void GeoFetchSystem::collectMaterialProcess() {
+    DrillState drillState = drillSystem->getState();
+    ContainerState containerState = containerSystem->getState();
+
+    if (containerState == ContainerState::READY && drillState != DrillState::RETRIEVING) {
+        containerSystem->tareLoadCell();
+        drillSystem->retrieve();
+        retrievingStartTime = millis();
+        return;
+    }
+    if (containerState == ContainerState::READY && drillState == DrillState::RETRIEVING
+        && (millis() - retrievingStartTime >= SystemSettings::RETRIEVING_TIMEOUT
+        || containerSystem->getWeightOfCurrentSample() >= SystemSettings::TARGET_WEIGHT)) {
+            drillSystem->stopRetrieving();
+            drillSystem->clean();
+            cleaningStartTime = millis();
+            state = SystemState::CLEANING;
+            return;
+    }
+}
+
+void GeoFetchSystem::cleaningProcess() {
+    DrillState drillState = drillSystem->getState();
+    ContainerState containerState = containerSystem->getState();
+
+    if (containerState == ContainerState::READY
+        && drillState == DrillState::CLEANING
+        && millis() - cleaningStartTime >= SystemSettings::CLEAN_DURATION
+    ) {
+        drillSystem->stopCleaning();
+        containerSystem->close();
+        return;
+    }
+
+    if (containerState == ContainerState::CLOSED) {
+        state = SystemState::READY;
+    }
+}
+
+void GeoFetchSystem::preparingProcess() {
+    if (containerSystem->getState() == ContainerState::CLOSED && drillSystem->getState() == DrillState::READY) {
+        state = SystemState::READY;
+        return;
+    }
+}
+
+void GeoFetchSystem::checkSystemStatus() {
+    if (drillSystem->getState() == DrillState::READY && containerSystem->getState() == ContainerState::CLOSED) {
+        state = SystemState::READY;
+    }
+}
+
 
 void GeoFetchSystem::update() {
-    containerSystem->update();
-    drillSystem->update();
     switch (state) {
+        case SystemState::UNKNOWN:
+            checkSystemStatus();
+            break;
         case SystemState::PREPARING:
             preparingProcess();
             break;
-        case SystemState::TAKING_SAMPLE:
-            takingSampleProcess();
+        case SystemState::DRILLING:
+            drillProcess();
+            break;
+        case SystemState::COLLECTING_MATERIAL:
+            collectMaterialProcess();
+            break;
+        case SystemState::CLEANING:
+            cleaningProcess();
             break;
         default:
             break;
     }
+}
+
+SystemState GeoFetchSystem::getSystemState() {
+    return state;
 }
